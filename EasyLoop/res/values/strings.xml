@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">EasyLoop</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="buttonStart">Start</string>
+    <string name="buttonStop">Stop</string>
+    <string name="buttonClear">Clear</string>
+    <string name="buttonRecord">Record</string>
+    <string name="buttonPlay">Play</string>
+    <string name="inToggleOn">On</string>
+    <string name="inToggleOff">Mute</string>
+    <string name="inSliderSlotTitle">Live</string>
+    <string name="tapeSliderSlotTitle">Tape</string>
+    
+</resources>

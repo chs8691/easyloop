@@ -1,0 +1,117 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (javaClasses.cpp:129), pid=6368, tid=7096
+#  fatal error: Invalid layout of preloaded class
+#
+# JRE version: 7.0_21-b11
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (23.21-b01 mixed mode windows-amd64 compressed oops)
+# Failed to write core dump. Minidumps are not enabled by default on client versions of Windows
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.sun.com/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x000000000009d000):  JavaThread "Unknown thread" [_thread_in_vm, id=7096, stack(0x0000000002720000,0x0000000002820000)]
+
+Stack: [0x0000000002720000,0x0000000002820000]
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+
+Other Threads:
+
+=>0x000000000009d000 (exited) JavaThread "Unknown thread" [_thread_in_vm, id=7096, stack(0x0000000002720000,0x0000000002820000)]
+
+VM state:not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+GC Heap History (0 events):
+No events
+
+Deoptimization events (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+Events (10 events):
+Event: 0.020 loading class 0x000000000252c870 done
+Event: 0.020 loading class 0x00000000024e2690 done
+Event: 0.020 loading class 0x00000000024e2660
+Event: 0.020 loading class 0x0000000002535570
+Event: 0.020 loading class 0x0000000002535570 done
+Event: 0.020 loading class 0x00000000025355b0
+Event: 0.020 loading class 0x00000000025355b0 done
+Event: 0.020 loading class 0x000000000930c970
+Event: 0.020 loading class 0x000000000930c970 done
+Event: 0.020 loading class 0x00000000024e2660 done
+
+
+Dynamic libraries:
+0x000000013f680000 - 0x000000013f6b3000 	D:\Progs\Java\jdk1.7.0_21\bin\javaw.exe
+0x00000000775a0000 - 0x0000000077749000 	C:\Windows\SYSTEM32\ntdll.dll
+0x0000000076ec0000 - 0x0000000076fdf000 	C:\Windows\system32\kernel32.dll
+0x000007fefdaf0000 - 0x000007fefdb5c000 	C:\Windows\system32\KERNELBASE.dll
+0x000007feff160000 - 0x000007feff23b000 	C:\Windows\system32\ADVAPI32.dll
+0x000007feff550000 - 0x000007feff5ef000 	C:\Windows\system32\msvcrt.dll
+0x000007fefef80000 - 0x000007fefef9f000 	C:\Windows\SYSTEM32\sechost.dll
+0x000007feff420000 - 0x000007feff54d000 	C:\Windows\system32\RPCRT4.dll
+0x0000000077290000 - 0x000000007738a000 	C:\Windows\system32\USER32.dll
+0x000007fefdec0000 - 0x000007fefdf27000 	C:\Windows\system32\GDI32.dll
+0x000007feff150000 - 0x000007feff15e000 	C:\Windows\system32\LPK.dll
+0x000007fefefa0000 - 0x000007feff069000 	C:\Windows\system32\USP10.dll
+0x000007fefc430000 - 0x000007fefc624000 	C:\Windows\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.7601.17514_none_fa396087175ac9ac\COMCTL32.dll
+0x000007fefe0f0000 - 0x000007fefe161000 	C:\Windows\system32\SHLWAPI.dll
+0x000007fefde90000 - 0x000007fefdebe000 	C:\Windows\system32\IMM32.DLL
+0x000007fefdf30000 - 0x000007fefe039000 	C:\Windows\system32\MSCTF.dll
+0x000007fefd9c0000 - 0x000007fefd9fc000 	C:\Windows\system32\nvinitx.dll
+0x000000000f000000 - 0x000000000f006000 	C:\Program Files\NVIDIA Corporation\CoProcManager\_etoured.dll
+0x000007fefb570000 - 0x000007fefb5b4000 	C:\Program Files\NVIDIA Corporation\CoProcManager\nvd3d9wrapx.dll
+0x000007feff240000 - 0x000007feff417000 	C:\Windows\system32\SETUPAPI.dll
+0x000007fefdb60000 - 0x000007fefdb96000 	C:\Windows\system32\CFGMGR32.dll
+0x000007feff070000 - 0x000007feff147000 	C:\Windows\system32\OLEAUT32.dll
+0x000007feff640000 - 0x000007feff843000 	C:\Windows\system32\ole32.dll
+0x000007fefdba0000 - 0x000007fefdbba000 	C:\Windows\system32\DEVOBJ.dll
+0x000007fefb640000 - 0x000007fefb682000 	C:\Program Files\NVIDIA Corporation\CoProcManager\nvdxgiwrapx.dll
+0x0000000068c50000 - 0x0000000068d21000 	D:\Progs\Java\jdk1.7.0_21\jre\bin\msvcr100.dll
+0x0000000065080000 - 0x00000000657a1000 	D:\Progs\Java\jdk1.7.0_21\jre\bin\server\jvm.dll
+0x000007fefb710000 - 0x000007fefb719000 	C:\Windows\system32\WSOCK32.dll
+0x000007feff5f0000 - 0x000007feff63d000 	C:\Windows\system32\WS2_32.dll
+0x000007fefe0e0000 - 0x000007fefe0e8000 	C:\Windows\system32\NSI.dll
+0x000007fefba20000 - 0x000007fefba5b000 	C:\Windows\system32\WINMM.dll
+0x0000000077770000 - 0x0000000077777000 	C:\Windows\system32\PSAPI.DLL
+0x0000000072d50000 - 0x0000000072d5f000 	D:\Progs\Java\jdk1.7.0_21\jre\bin\verify.dll
+0x0000000069e20000 - 0x0000000069e48000 	D:\Progs\Java\jdk1.7.0_21\jre\bin\java.dll
+0x000000006cef0000 - 0x000000006cf05000 	D:\Progs\Java\jdk1.7.0_21\jre\bin\zip.dll
+
+VM Arguments:
+jvm_args: -Dfile.encoding=Cp1252 -Xbootclasspath:D:\Projekte\EGH\SDE\AndroidSDK\platforms\android-17\android.jar 
+java_command: org.eclipse.jdt.internal.junit.runner.RemoteTestRunner -version 3 -port 60553 -testLoaderClass org.eclipse.jdt.internal.junit4.runner.JUnit4TestLoader -loaderpluginname org.eclipse.jdt.junit4.runtime -classNames UnitTest
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+PATH=C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Microsoft Application Virtualization Client;C:\Program Files (x86)\IBM\Lotus\Notes\;D:\Program Files (x86)\TortoiseGit\bin;D:\Program Files (x86)\TortoiseSVN\bin;D:\Program Files (x86)\Mozilla Firefox;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Microsoft Application Virtualization Client;C:\Program Files (x86)\IBM\Lotus\Notes\
+USERNAME=ChristianSchulzendor
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 42 Stepping 7, GenuineIntel
+
+
+
+---------------  S Y S T E M  ---------------
+
+OS: Windows 7 , 64 bit Build 7601 Service Pack 1
+
+CPU:total 8 (4 cores per cpu, 2 threads per core) family 6 model 42 stepping 7, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, ht, tsc, tscinvbit
+
+Memory: 4k page, physical 4078828k(1313620k free), swap 8155796k(4489352k free)
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (23.21-b01) for windows-amd64 JRE (1.7.0_21-b11), built on Apr  4 2013 08:11:28 by "java_re" with unknown MS VC++:1600
+
+time: Wed May 22 17:10:43 2013
+elapsed time: 0 seconds
+

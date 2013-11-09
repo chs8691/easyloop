@@ -1,0 +1,59 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_centerHorizontal="true"
+    android:orientation="horizontal"
+    tools:context=".MainActivity" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="20"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/sliderView_titleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="10"
+                android:text="Slot" />
+
+            <TextView
+                android:id="@+id/sliderView_level"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="10"
+                android:gravity="left"
+                android:text="100" />
+        </LinearLayout>
+
+        <de.egh.easyloop.ui.component.VuMeter
+            android:id="@+id/sliderView_vuMeter"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+
+            android:background="#ff000000" />
+
+        <SeekBar
+            android:id="@+id/sliderView_seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <ToggleButton
+        android:id="@+id/sliderView_muteToggle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="60"
+        android:text="ToggleButton"
+        android:textOff="@string/inToggleOff"
+        android:textOn="@string/inToggleOn" />
+
+</LinearLayout>
