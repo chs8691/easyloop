@@ -22,7 +22,8 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
-public class LoopService extends Service {
+@Deprecated
+class LoopService extends Service {
 	public interface EventListener {
 		public void inPlaybackLevelChanged(short level);
 

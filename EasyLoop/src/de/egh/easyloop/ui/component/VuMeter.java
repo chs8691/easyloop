@@ -14,12 +14,25 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.graphics.drawable.shapes.Shape;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 
 /** Shows vertical line of the last touch. */
 public class VuMeter extends View implements
 		ValueAnimator.AnimatorUpdateListener {
+
+	private class Color {
+		private class Background {
+			private static final int UNMUTED = 0xff000000;
+			private static final int MUTED = 0xff7D7D7D;
+		}
+
+		private class Needle {
+			private static final int BASE = 0xFFDBDBDB;
+		}
+	}
+
 	/**
 	 * A data structure that holds a Shape and various properties that can be
 	 * used to define how the shape is drawn.
@@ -109,6 +122,10 @@ public class VuMeter extends View implements
 		}
 	}
 
+	private static final int NEEDLE_WIDTH = 10;
+
+	private final static String TAG = "VuMeter";
+
 	private Bitmap bitmap;
 
 	private Paint paint;
@@ -120,13 +137,19 @@ public class VuMeter extends View implements
 
 	private AnimatorSet s1;
 
+	private boolean mute;
+
+	private int value;
+
+	private int threshold;
+
 	public VuMeter(final Context context, final AttributeSet attrs) {
 		super(context, attrs);
 
 	}
 
 	private float calculateToX(final int value) {
-		return value * getWidth() / maxValue;
+		return value * (getWidth() - NEEDLE_WIDTH) / maxValue;
 	}
 
 	/**
@@ -137,7 +160,7 @@ public class VuMeter extends View implements
 		final RectShape needle = new RectShape();
 
 		// Set dimension
-		needle.resize(10, getHeight() - 4);
+		needle.resize(NEEDLE_WIDTH, getHeight() - 4);
 
 		final ShapeDrawable drawable = new ShapeDrawable(needle);
 
@@ -148,7 +171,7 @@ public class VuMeter extends View implements
 
 		final Paint paint = drawable.getPaint(); // new
 													// Paint(Paint.ANTI_ALIAS_FLAG);
-		paint.setColor(0xAFFFFFFF);
+		paint.setColor(Color.Needle.BASE);
 		paint.setStyle(Paint.Style.FILL);
 		shapeHolder.setPaint(paint);
 
@@ -166,6 +189,12 @@ public class VuMeter extends View implements
 		return value * 250 / maxValue;
 	}
 
+	// /** Reset needle color */
+	// @Override
+	// protected void onAnimationEnd() {
+	// invalidate();
+	// }
+
 	@Override
 	public void onAnimationUpdate(final ValueAnimator animation) {
 		invalidate();
@@ -179,6 +208,21 @@ public class VuMeter extends View implements
 		if (needle == null)
 			needle = createNeedle(0);
 
+		// mute mode: more alpha
+		if (mute)
+			needle.setAlpha(0.3f);
+		else
+			needle.setAlpha(1f);
+
+		// Overdrive: red needle for the loudest 10 %
+		// int darkColor = 0xff000000 | red/4 << 16 | green/4 << 8 | blue/4;
+		final int color = Color.Needle.BASE;
+		if (value > threshold) {
+
+			needle.setColor(0xFF000000 | 0xFF << 16 | 0x00 << 8 | 0x00);
+		} else
+			needle.setColor(color);
+
 		canvas.save();
 		canvas.translate(needle.getX(), needle.getY());
 		needle.getShape().draw(canvas);
@@ -188,18 +232,39 @@ public class VuMeter extends View implements
 
 	/** Set this once before using setValue(). Must a positive integer */
 	public void setMaxValue(final int maxValue) {
+		Log.v(TAG, "SetMaxValue() " + maxValue);
+
 		if (maxValue <= 0)
 			throw new InvalidParameterException(
-					"maxValue must be positive, but was" + maxValue);
+					"maxValue must be positive, but was " + maxValue);
 
 		this.maxValue = maxValue;
+		threshold = maxValue * 9 / 10;
+	}
+
+	/**
+	 * In mute mode the audio level will be still updated, but the colors will
+	 * be muted.
+	 * 
+	 * @param mute
+	 *            boolean with TRUE, FALSE normal mode.
+	 */
+	public void setMute(final boolean mute) {
+		this.mute = mute;
+		if (mute)
+			this.setBackgroundColor(Color.Background.MUTED);
+		else
+			this.setBackgroundColor(Color.Background.UNMUTED);
+
 	}
 
 	/** New value for the VU meter. setValueMax must be set before */
 	public void setValue(final int value) {
+		this.value = value;
 		if (value < 0 || value > maxValue)
 			throw new InvalidParameterException(
-					"Value must be positive and LE maxValue, but was" + value);
+					"Value must be positive and <= " + maxValue + ", but was "
+							+ value);
 
 		final float fromX = needle.getX();
 		final float toX = calculateToX(value);

@@ -39,7 +39,7 @@
         android:layout_weight="9"
         android:text="@string/buttonStop" />
 
-    <de.egh.easyloop.ui.SliderSlot
+    <de.egh.easyloop.ui.component.SliderSlot
         android:id="@+id/inSliderSlot"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -47,8 +47,8 @@
         easyloop:sliderSlot_seekBarEnabled="true"
         easyloop:sliderSlot_title="@string/inSliderSlotTitle" />
 
-    <de.egh.easyloop.ui.SliderSlot
-        android:id="@+id/playbackSliderSlot"
+    <de.egh.easyloop.ui.component.SliderSlot
+        android:id="@+id/tapeSliderSlot"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="10"

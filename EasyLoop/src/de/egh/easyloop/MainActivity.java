@@ -15,7 +15,8 @@ import android.widget.Button;
 import android.widget.ToggleButton;
 import de.egh.easyloop.logic.SessionService;
 import de.egh.easyloop.logic.SessionService.SessionEventListener;
-import de.egh.easyloop.ui.SliderSlot;
+import de.egh.easyloop.ui.component.SliderSlot;
+import de.egh.easyloop.ui.component.SliderSlot.EventListener;
 
 public class MainActivity extends Activity {
 
@@ -72,6 +73,25 @@ public class MainActivity extends Activity {
 			// Initialize Buttons
 			record.setChecked(sessionService.isRecording());
 			play.setChecked(sessionService.isPlaying());
+
+			// Initialize VU meter
+			tapeSliderSlot.setMaxLevel(sessionService.getMaxLevel());
+
+			tapeSliderSlot.setEventListener(new EventListener() {
+
+				@Override
+				public void onMuteToggled(final boolean mute) {
+					sessionService.setMute(mute);
+				}
+
+				@Override
+				public void onVolumeChanged(final int volume) {
+					sessionService.setVolume(volume);
+
+				}
+			});
+			sessionService.setMute(tapeSliderSlot.getMute());
+			sessionService.setVolume(tapeSliderSlot.getVolume());
 
 			// We want service to alive after unbind, if tapemachine active
 			startService(new Intent(MainActivity.this, SessionService.class));
@@ -135,6 +155,9 @@ public class MainActivity extends Activity {
 
 		// Up- and down buttons connect to volume
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+		tapeSliderSlot = (SliderSlot) findViewById(R.id.tapeSliderSlot);
+		inSliderSlot = (SliderSlot) findViewById(R.id.inSliderSlot);
 	}
 
 	@Override
@@ -146,7 +169,7 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onStart() {
-		Log.v(TAG, "onStart");
+		Log.v(TAG, "onStart()");
 
 		super.onStart();
 		Log.v(TAG,

@@ -18,6 +18,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 public class Tapemachine {
+
+	/** Tape machine's events */
 	interface EventListener {
 
 		public void onLevelChanged(short level);
@@ -72,15 +74,16 @@ public class Tapemachine {
 					while (!isCancelled() && !end) {
 						level = 0;
 
-						for (j = 0; dis.available() > 0 && (j < playBufferSize); j++) {
-							playBuffer[j] = dis.readShort();
-							if (playBuffer[j] > level) {
-								level = playBuffer[j];
+						for (j = 0; dis.available() > 0
+								&& (j < playBufferSizeInByte / 2); j++) {
+							playBufferShort[j] = dis.readShort();
+							if (playBufferShort[j] > level) {
+								level = playBufferShort[j];
 							}
 						}
-						publishProgress(playBuffer);
+						audioTrack.write(playBufferShort, 0, j);
 
-						audioTrack.write(playBuffer, 0, j);
+						publishProgress(playBufferShort);
 
 						if (dis.available() <= 0) {
 							end = true;
@@ -91,7 +94,13 @@ public class Tapemachine {
 					bis.close();
 					is.close();
 				}
-				audioTrack.stop();
+
+				// Interrupt playing immediately
+				audioTrack.pause();
+				// Discard buffer because we don't support a pause button
+				audioTrack.flush();
+				// Last value event must be 0
+				publishProgress(new short[0]);
 
 			} catch (final Exception e) {
 				e.printStackTrace();
@@ -125,19 +134,22 @@ public class Tapemachine {
 				audioRecord.startRecording();
 
 				while (!isCancelled()) {
-					bufferReadResult = audioRecord.read(recordBuffer, 0,
-							recordBufferSize);
+					bufferReadResult = audioRecord.read(recordBufferShort, 0,
+							recordBufferSizeInByte / 4);
 
 					for (int i = 0; i < bufferReadResult; i++) {
-						dos.writeShort(recordBuffer[i]);
+						dos.writeShort(recordBufferShort[i]);
 					}
-					// publishProgress(recordBuffer[0]);
+					publishProgress(recordBufferShort);
 
 				}
 				dos.close();
 				bos.close();
 				fos.close();
 				audioRecord.stop();
+				// Last value event must be 0
+				publishProgress(new short[0]);
+
 			} catch (final Exception e) {
 				e.printStackTrace();
 			}
@@ -167,7 +179,6 @@ public class Tapemachine {
 		@Override
 		protected void onCancelled() {
 			Log.v(TAG, "onCancelled()");
-			eventListener.onLevelChanged((short) 0);
 			super.onCancelled();
 		}
 
@@ -185,9 +196,15 @@ public class Tapemachine {
 			for (int i = 0; i < level[0].length; i++)
 				if (level[0][i] > max)
 					max = level[0][i];
-			eventListener.onLevelChanged(max);
+
+			// Level depends on
+			eventListener.onLevelChanged((short) (max * volume));
 		}
 	}
+
+	// Buffer must be bigger than minimum buffer size
+	private static final int RECORD_BUFFER_FACTOR = 10;
+	private static final int PLAY_BUFFER_FACTOR = 2;
 
 	private static final String RECORD_FILENAME = "loop1.pcm";
 
@@ -200,21 +217,25 @@ public class Tapemachine {
 
 	private static final String TAG = "Tapemachine";
 
+	/** mute play signal */
+	private boolean mute;
+
 	private final EventListener eventListener;
 	private Status status = Status.INACTIVE;
 	private Mode mode = Mode.RECORDING;
 
 	// --- For recording ---//
-	private int recordBufferSize;
-	private short[] recordBuffer;
+	private int recordBufferSizeInByte;
+	private short[] recordBufferShort;
 	private AudioRecord audioRecord;
 
-	private int playBufferSize;
+	private int playBufferSizeInByte;
 	private AudioTrack audioTrack;
-	private short[] playBuffer;
+	private short[] playBufferShort;
 
 	// For file access
 	private final ContextWrapper contextWrapper;
+	private float volume;
 
 	public Tapemachine(final EventListener eventListener,
 			final ContextWrapper contextWrapper) {
@@ -223,24 +244,30 @@ public class Tapemachine {
 
 		try {
 
-			recordBufferSize = AudioRecord.getMinBufferSize(FREQUENCY,
+			recordBufferSizeInByte = AudioRecord.getMinBufferSize(FREQUENCY,
 					CHANNEL_CONFIG, AUDIO_ENCODING) //
-			* 2; // for testing
+					* RECORD_BUFFER_FACTOR;
 
-			recordBuffer = new short[recordBufferSize];
+			Log.v(TAG, "Set recordBufferSizeInBye=" + recordBufferSizeInByte);
+
+			// A short has 2 bytes
+			recordBufferShort = new short[recordBufferSizeInByte / 2];
 
 			audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
-					FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING, recordBufferSize);
+					FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING,
+					recordBufferSizeInByte);
 
-			playBufferSize = AudioTrack.getMinBufferSize(FREQUENCY,
+			playBufferSizeInByte = AudioTrack.getMinBufferSize(FREQUENCY,
 					AudioFormat.CHANNEL_OUT_MONO, AUDIO_ENCODING)// ;
-			* 2; // for testing
+					* PLAY_BUFFER_FACTOR;
+			Log.v(TAG, "Set playBufferSizeInBye=" + playBufferSizeInByte);
 
 			audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, FREQUENCY,
 					AudioFormat.CHANNEL_OUT_MONO, AUDIO_ENCODING,
-					playBufferSize, AudioTrack.MODE_STREAM);
+					playBufferSizeInByte, AudioTrack.MODE_STREAM);
 
-			playBuffer = new short[playBufferSize];
+			// A short has 2 bytes
+			playBufferShort = new short[playBufferSizeInByte / 2];
 
 		} catch (final Throwable t) {
 			Log.v(TAG,
@@ -303,6 +330,12 @@ public class Tapemachine {
 		eventListener.onStopped(mode.copy());
 	}
 
+	/** Returns the possible maximum level as absolute value. */
+	public short getMaxValue() {
+
+		return Short.MAX_VALUE;
+	}
+
 	public boolean isActive() {
 		return status.equals(Status.ACTIVE);
 
@@ -314,6 +347,23 @@ public class Tapemachine {
 
 	public boolean isRecording() {
 		return status.equals(Status.ACTIVE) && mode.equals(Mode.RECORDING);
+	}
+
+	public void setMute(final boolean mute) {
+		Log.v(TAG, "set mute=" + mute);
+		this.mute = mute;
+		if (mute)
+			audioTrack.setStereoVolume(0f, 0f);
+		else
+			audioTrack.setStereoVolume(volume, volume);
+	}
+
+	public void setVolume(final float volume) {
+		Log.v(TAG, "set volume=" + volume);
+		this.volume = volume;
+		if (!mute)
+			audioTrack.setStereoVolume(volume, volume);
+
 	}
 
 }

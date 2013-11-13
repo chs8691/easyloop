@@ -48,13 +48,21 @@ public class SessionService extends Service {
 		}
 	}
 
+	/** Events, which occurred in SessionService */
 	public interface SessionEventListener {
+		/** Playin started */
 		public void onPlay();
 
+		/** Recording started */
 		public void onRecording();
 
+		/** Tape machine stopped (playing or recording) */
 		public void onStop();
 
+		/**
+		 * tape machines output signal has been changed. Use this for showing
+		 * the level.
+		 */
 		public void onTapeLevelChanged(short Level);
 	}
 
@@ -65,7 +73,7 @@ public class SessionService extends Service {
 
 	private static final int ONGOING_RECORD_NOTIFICATION = 2;
 	private final Tapemachine tapemachine;
-	private final Mainsignal mainsignal;
+	// private final Mainsignal mainsignal;
 
 	private SessionEventListener sessionEventListener;
 
@@ -117,10 +125,15 @@ public class SessionService extends Service {
 
 			}
 		}, this);
-		mainsignal = new Mainsignal();
+		// mainsignal = new Mainsignal();
 
 		sessionEventListener = new NullSessionEventListener();
 
+	}
+
+	/** Returns the most possible value */
+	public short getMaxLevel() {
+		return tapemachine.getMaxValue();
 	}
 
 	public boolean isPlaying() {
@@ -171,10 +184,20 @@ public class SessionService extends Service {
 		this.sessionEventListener = new NullSessionEventListener();
 	}
 
+	/** If TRUE, mute the play signal, otherwise un-mute. */
+	public void setMute(final boolean mute) {
+		tapemachine.setMute(mute);
+	}
+
 	public void setSessionEventListener(
 			final SessionEventListener sessionEventListener) {
 		this.sessionEventListener = sessionEventListener;
 
+	}
+
+	/** */
+	public void setVolume(final int volume) {
+		tapemachine.setVolume(volume / 100f);
 	}
 
 	public void stop() {
