@@ -29,7 +29,9 @@ public class VuMeter extends View implements
 		}
 
 		private class Needle {
-			private static final int BASE = 0xFFDBDBDB;
+			private static final int VALUE = 0xDB;
+			private static final int BASE = 0xFF000000 | VALUE << 16
+					| VALUE << 8 | VALUE;
 		}
 	}
 
@@ -139,8 +141,6 @@ public class VuMeter extends View implements
 
 	private boolean mute;
 
-	private int value;
-
 	private int threshold;
 
 	public VuMeter(final Context context, final AttributeSet attrs) {
@@ -180,20 +180,14 @@ public class VuMeter extends View implements
 
 	/** Calculate duration for linear velocity. For 100 % the duration is 500 ms */
 	private int durationFall(final int value) {
-		// return 500;
-		return value * 1000 / maxValue;
+
+		return value * 2000 / maxValue;
 	}
 
 	private int durationRaise(final int value) {
-		// return 250;
+
 		return value * 250 / maxValue;
 	}
-
-	// /** Reset needle color */
-	// @Override
-	// protected void onAnimationEnd() {
-	// invalidate();
-	// }
 
 	@Override
 	public void onAnimationUpdate(final ValueAnimator animation) {
@@ -217,9 +211,14 @@ public class VuMeter extends View implements
 		// Overdrive: red needle for the loudest 10 %
 		// int darkColor = 0xff000000 | red/4 << 16 | green/4 << 8 | blue/4;
 		final int color = Color.Needle.BASE;
-		if (value > threshold) {
+		final int offset;
 
-			needle.setColor(0xFF000000 | 0xFF << 16 | 0x00 << 8 | 0x00);
+		if (needle.getX() > threshold) {
+			final float width = (getWidth() - NEEDLE_WIDTH - threshold);
+			final float x = needle.getX() - threshold;
+			offset = (int) (Color.Needle.VALUE * (1f - (x / width)));
+			needle.setColor(0xFF000000 | Color.Needle.VALUE << 16 | offset << 8
+					| offset);
 		} else
 			needle.setColor(color);
 
@@ -227,6 +226,16 @@ public class VuMeter extends View implements
 		canvas.translate(needle.getX(), needle.getY());
 		needle.getShape().draw(canvas);
 		canvas.restore();
+
+	}
+
+	@Override
+	protected void onSizeChanged(final int w, final int h, final int oldw,
+			final int oldh) {
+		super.onSizeChanged(w, h, oldw, oldh);
+
+		// Set Threshold for red colored needle range
+		threshold = (w - NEEDLE_WIDTH) * 8 / 10;
 
 	}
 
@@ -239,7 +248,7 @@ public class VuMeter extends View implements
 					"maxValue must be positive, but was " + maxValue);
 
 		this.maxValue = maxValue;
-		threshold = maxValue * 9 / 10;
+
 	}
 
 	/**
@@ -260,7 +269,7 @@ public class VuMeter extends View implements
 
 	/** New value for the VU meter. setValueMax must be set before */
 	public void setValue(final int value) {
-		this.value = value;
+
 		if (value < 0 || value > maxValue)
 			throw new InvalidParameterException(
 					"Value must be positive and <= " + maxValue + ", but was "

@@ -82,7 +82,7 @@ public class SessionService extends Service {
 		tapemachine = new Tapemachine(new Tapemachine.EventListener() {
 
 			@Override
-			public void onLevelChanged(final short level) {
+			public void onLevelTapeChanged(final short level) {
 				sessionEventListener.onTapeLevelChanged(level);
 			}
 
@@ -186,7 +186,7 @@ public class SessionService extends Service {
 
 	/** If TRUE, mute the play signal, otherwise un-mute. */
 	public void setMute(final boolean mute) {
-		tapemachine.setMute(mute);
+		tapemachine.setTapeMute(mute);
 	}
 
 	public void setSessionEventListener(
@@ -197,7 +197,7 @@ public class SessionService extends Service {
 
 	/** */
 	public void setVolume(final int volume) {
-		tapemachine.setVolume(volume / 100f);
+		tapemachine.setTapeVolume(volume / 100f);
 	}
 
 	public void stop() {

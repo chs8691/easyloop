@@ -17,18 +17,68 @@ import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.util.Log;
 
+/** Has two modules: A record/play and a live signal routing */
 public class Tapemachine {
 
 	/** Tape machine's events */
 	interface EventListener {
 
-		public void onLevelChanged(short level);
+		/** Peak strategy fires a level change for Tape module */
+		public void onLevelTapeChanged(short level);
 
+		/** Peak strategy fires a level change for Tape module */
+		public void onLiveLevelChanged(short level);
+
+		/** Fires, when tape stopped recording or playing */
+		public void onLiveStopped(Mode fromMode);
+
+		/** Fires, when tape started recording */
+		public void onStartLive();
+
+		/** Fires, when tape started playing */
 		public void onStartPlaying();
 
+		/** Fires, when tape started recording */
 		public void onStartRecording();
 
+		/** Fires, when tape stopped recording or playing */
 		public void onStopped(Mode fromMode);
+
+	}
+
+	/** Only open input channel without recording */
+	private class LiveTask extends TapemachineAsyncTask {
+
+		@Override
+		protected Result doInBackground(final String... params) {
+
+			try {
+
+				audioRecord.startRecording();
+
+				while (!isCancelled()) {
+					audioRecord.read(recordBufferShort, 0,
+							recordBufferSizeInByte / 4);
+
+					publishProgress(recordBufferShort);
+
+				}
+				audioRecord.stop();
+				// Last value event must be 0
+				publishProgress(new short[0]);
+
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
+
+			return null;
+
+		}
+
+		@Override
+		protected int getPeakHistorySize() {
+			return recordPeakHistorySize;
+		}
 
 	}
 
@@ -109,6 +159,11 @@ public class Tapemachine {
 			return null;
 		}
 
+		@Override
+		protected int getPeakHistorySize() {
+			return playPeakHistorySize;
+		}
+
 	}
 
 	private class RecordTask extends TapemachineAsyncTask {
@@ -158,6 +213,11 @@ public class Tapemachine {
 
 		}
 
+		@Override
+		protected int getPeakHistorySize() {
+			return recordPeakHistorySize;
+		}
+
 	}
 
 	/** Dummy implementation */
@@ -175,6 +235,14 @@ public class Tapemachine {
 	 */
 	private abstract class TapemachineAsyncTask extends
 			AsyncTask<String, short[], Result> {
+		// Biggest index in maxHistory
+		// Ugly trap: The array size is fixed, but the buffer size will be
+		// calculated at runtime
+		private final short[] maxHistory = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+		/** Peak strategy needs the buffer size. */
+		protected abstract int getPeakHistorySize();
 
 		@Override
 		protected void onCancelled() {
@@ -188,23 +256,48 @@ public class Tapemachine {
 		}
 
 		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			if (getPeakHistorySize() > 20 || getPeakHistorySize() < 1)
+				throw new RuntimeException("peakHistorySize is "
+						+ getPeakHistorySize()
+						+ " but must be between 1 and 20");
+
+		}
+
+		@Override
 		protected void onProgressUpdate(final short[]... level) {
 
+			// remove oldest max value
+			// buffer size * history size is constant
+			for (int i = getPeakHistorySize() - 1; i >= 1; i--) {
+				maxHistory[i] = maxHistory[i - 1];
+			}
+
 			// This is our PeakStrategy:
-			// Max of buffer
-			short max = 0;
+			// Max of the last 10 buffers
+			short actMax = 0;
 			for (int i = 0; i < level[0].length; i++)
-				if (level[0][i] > max)
-					max = level[0][i];
+				if (level[0][i] > actMax)
+					actMax = level[0][i];
+
+			// Store max of actual buffer in our max history
+			maxHistory[0] = actMax;
+
+			// find max in history
+			short newMax = 0;
+			for (int i = 0; i < getPeakHistorySize(); i++)
+				if (maxHistory[i] > newMax)
+					newMax = maxHistory[i];
 
 			// Level depends on
-			eventListener.onLevelChanged((short) (max * volume));
+			eventListener.onLevelTapeChanged((short) (newMax * volume));
 		}
 	}
 
 	// Buffer must be bigger than minimum buffer size
 	private static final int RECORD_BUFFER_FACTOR = 10;
-	private static final int PLAY_BUFFER_FACTOR = 2;
+	private static final int PLAY_BUFFER_FACTOR = 10;
 
 	private static final String RECORD_FILENAME = "loop1.pcm";
 
@@ -226,10 +319,12 @@ public class Tapemachine {
 
 	// --- For recording ---//
 	private int recordBufferSizeInByte;
+	private final int recordPeakHistorySize;
 	private short[] recordBufferShort;
 	private AudioRecord audioRecord;
 
 	private int playBufferSizeInByte;
+	private final int playPeakHistorySize;
 	private AudioTrack audioTrack;
 	private short[] playBufferShort;
 
@@ -274,6 +369,12 @@ public class Tapemachine {
 					"An error occured during recording initialization"
 							+ t.getMessage());
 		}
+
+		// For peak strategy we want to know the size of max value history
+		recordPeakHistorySize = calculatePeakHistorySize(recordBufferSizeInByte);
+		playPeakHistorySize = calculatePeakHistorySize(playBufferSizeInByte);
+		Log.v(TAG, "Set recordPeakHistorySizes=" + recordPeakHistorySize);
+		Log.v(TAG, "Set playPeakHistorySizes=" + playPeakHistorySize);
 
 	}
 
@@ -330,10 +431,18 @@ public class Tapemachine {
 		eventListener.onStopped(mode.copy());
 	}
 
+	private int calculatePeakHistorySize(final int bufferSizeInByte) {
+		if (bufferSizeInByte > 100000)
+			return 1;
+		else
+			return (100000 - bufferSizeInByte) / 20000;
+
+	}
+
 	/** Returns the possible maximum level as absolute value. */
 	public short getMaxValue() {
 
-		return Short.MAX_VALUE;
+		return (short) (Short.MAX_VALUE * AudioTrack.getMaxVolume());
 	}
 
 	public boolean isActive() {
@@ -349,7 +458,7 @@ public class Tapemachine {
 		return status.equals(Status.ACTIVE) && mode.equals(Mode.RECORDING);
 	}
 
-	public void setMute(final boolean mute) {
+	public void setTapeMute(final boolean mute) {
 		Log.v(TAG, "set mute=" + mute);
 		this.mute = mute;
 		if (mute)
@@ -358,7 +467,7 @@ public class Tapemachine {
 			audioTrack.setStereoVolume(volume, volume);
 	}
 
-	public void setVolume(final float volume) {
+	public void setTapeVolume(final float volume) {
 		Log.v(TAG, "set volume=" + volume);
 		this.volume = volume;
 		if (!mute)
