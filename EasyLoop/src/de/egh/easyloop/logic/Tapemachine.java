@@ -17,32 +17,23 @@ import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.util.Log;
 
-/** Has two modules: A record/play and a live signal routing */
+/** Has two channels: A record/play and a live signal routing */
 public class Tapemachine {
 
-	/** Tape machine's events */
-	interface EventListener {
+	interface LevelChangeEventListener {
+		/** Peak strategy fires a level change */
+		public void onLevelChange(short level);
 
-		/** Peak strategy fires a level change for Tape module */
-		public void onLevelTapeChanged(short level);
+	}
 
-		/** Peak strategy fires a level change for Tape module */
-		public void onLiveLevelChanged(short level);
+	/** Tape machine's events for live channel */
+	interface LiveEventListener extends LevelChangeEventListener {
 
-		/** Fires, when tape stopped recording or playing */
-		public void onLiveStopped(Mode fromMode);
+		/** Fires, when live signal opened */
+		public void onStart();
 
-		/** Fires, when tape started recording */
-		public void onStartLive();
-
-		/** Fires, when tape started playing */
-		public void onStartPlaying();
-
-		/** Fires, when tape started recording */
-		public void onStartRecording();
-
-		/** Fires, when tape stopped recording or playing */
-		public void onStopped(Mode fromMode);
+		/** Fires, when live signal stopped */
+		public void onStop();
 
 	}
 
@@ -54,16 +45,16 @@ public class Tapemachine {
 
 			try {
 
-				audioRecord.startRecording();
+				audioLive.startRecording();
 
 				while (!isCancelled()) {
-					audioRecord.read(recordBufferShort, 0,
-							recordBufferSizeInByte / 4);
+					audioLive
+							.read(liveBufferShort, 0, liveBufferSizeInByte / 4);
 
-					publishProgress(recordBufferShort);
+					publishProgress(liveBufferShort);
 
 				}
-				audioRecord.stop();
+				audioLive.stop();
 				// Last value event must be 0
 				publishProgress(new short[0]);
 
@@ -76,8 +67,19 @@ public class Tapemachine {
 		}
 
 		@Override
+		protected LevelChangeEventListener getLevelChangeEventListener() {
+			return liveEventListener;
+		}
+
+		/** Same configuration as recording */
+		@Override
 		protected int getPeakHistorySize() {
-			return recordPeakHistorySize;
+			return livePeakHistorySize;
+		}
+
+		@Override
+		protected float getVolume() {
+			return liveVolume;
 		}
 
 	}
@@ -160,14 +162,23 @@ public class Tapemachine {
 		}
 
 		@Override
+		protected LevelChangeEventListener getLevelChangeEventListener() {
+			return tapeEventListener;
+		}
+
+		@Override
 		protected int getPeakHistorySize() {
 			return playPeakHistorySize;
+		}
+
+		@Override
+		protected float getVolume() {
+			return tapeVolume;
 		}
 
 	}
 
 	private class RecordTask extends TapemachineAsyncTask {
-
 		@Override
 		protected Result doInBackground(final String... params) {
 			BufferedOutputStream bos;
@@ -214,8 +225,18 @@ public class Tapemachine {
 		}
 
 		@Override
+		protected LevelChangeEventListener getLevelChangeEventListener() {
+			return tapeEventListener;
+		}
+
+		@Override
 		protected int getPeakHistorySize() {
 			return recordPeakHistorySize;
+		}
+
+		@Override
+		protected float getVolume() {
+			return tapeVolume;
 		}
 
 	}
@@ -229,31 +250,40 @@ public class Tapemachine {
 		INACTIVE, ACTIVE
 	}
 
+	/** Tape machine's events for tape channel */
+	interface TapeEventListener extends LevelChangeEventListener {
+
+		/** Fires, when tape started playing */
+		public void onStartPlaying();
+
+		/** Fires, when tape started recording */
+		public void onStartRecording();
+
+		/** Fires, when tape stopped recording or playing */
+		public void onStop(Mode fromMode);
+
+	}
+
 	/**
 	 * Parameterized base class with three value String ,Short[] = actual
 	 * buffer, Result
 	 */
 	private abstract class TapemachineAsyncTask extends
 			AsyncTask<String, short[], Result> {
+
 		// Biggest index in maxHistory
 		// Ugly trap: The array size is fixed, but the buffer size will be
 		// calculated at runtime
 		private final short[] maxHistory = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
+		protected abstract LevelChangeEventListener getLevelChangeEventListener();
+
 		/** Peak strategy needs the buffer size. */
 		protected abstract int getPeakHistorySize();
 
-		@Override
-		protected void onCancelled() {
-			Log.v(TAG, "onCancelled()");
-			super.onCancelled();
-		}
-
-		@Override
-		protected void onPostExecute(final Result result) {
-			Log.v(TAG, "onPostExecute() " + mode.toString());
-		}
+		/** Value of volume for this module */
+		protected abstract float getVolume();
 
 		@Override
 		protected void onPreExecute() {
@@ -291,8 +321,10 @@ public class Tapemachine {
 					newMax = maxHistory[i];
 
 			// Level depends on
-			eventListener.onLevelTapeChanged((short) (newMax * volume));
+			getLevelChangeEventListener().onLevelChange(
+					(short) (newMax * getVolume()));
 		}
+
 	}
 
 	// Buffer must be bigger than minimum buffer size
@@ -307,21 +339,30 @@ public class Tapemachine {
 
 	private TapemachineAsyncTask playTask;
 	private TapemachineAsyncTask recordTask;
+	private TapemachineAsyncTask liveTask;
 
 	private static final String TAG = "Tapemachine";
 
 	/** mute play signal */
-	private boolean mute;
+	private boolean tapeMute;
 
-	private final EventListener eventListener;
-	private Status status = Status.INACTIVE;
-	private Mode mode = Mode.RECORDING;
+	private final TapeEventListener tapeEventListener;
+	private final LiveEventListener liveEventListener;
+	private Status tapeStatus = Status.INACTIVE;
+	private Status liveStatus = Status.INACTIVE;
+	private Mode tapeMode = Mode.RECORDING;
 
 	// --- For recording ---//
 	private int recordBufferSizeInByte;
 	private final int recordPeakHistorySize;
 	private short[] recordBufferShort;
 	private AudioRecord audioRecord;
+
+	// --- For live routing ---- //
+	private int liveBufferSizeInByte;
+	private final int livePeakHistorySize;
+	private short[] liveBufferShort;
+	private AudioRecord audioLive;
 
 	private int playBufferSizeInByte;
 	private final int playPeakHistorySize;
@@ -330,11 +371,15 @@ public class Tapemachine {
 
 	// For file access
 	private final ContextWrapper contextWrapper;
-	private float volume;
+	private float tapeVolume;
+	private float liveVolume;
+	private AudioService audioService;
 
-	public Tapemachine(final EventListener eventListener,
+	public Tapemachine(final TapeEventListener tapeEventListener,
+			final LiveEventListener liveEventListener,
 			final ContextWrapper contextWrapper) {
-		this.eventListener = eventListener;
+		this.tapeEventListener = tapeEventListener;
+		this.liveEventListener = liveEventListener;
 		this.contextWrapper = contextWrapper;
 
 		try {
@@ -351,6 +396,16 @@ public class Tapemachine {
 			audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
 					FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING,
 					recordBufferSizeInByte);
+
+			// Live is configured like record
+			liveBufferSizeInByte = recordBufferSizeInByte;
+			liveBufferShort = new short[liveBufferSizeInByte / 2];
+			audioLive = new AudioRecord(MediaRecorder.AudioSource.MIC,
+					FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING,
+					liveBufferSizeInByte);
+
+			// Live has no volume control
+			liveVolume = 1.0f;
 
 			playBufferSizeInByte = AudioTrack.getMinBufferSize(FREQUENCY,
 					AudioFormat.CHANNEL_OUT_MONO, AUDIO_ENCODING)// ;
@@ -372,53 +427,90 @@ public class Tapemachine {
 
 		// For peak strategy we want to know the size of max value history
 		recordPeakHistorySize = calculatePeakHistorySize(recordBufferSizeInByte);
+		livePeakHistorySize = calculatePeakHistorySize(liveBufferSizeInByte);
 		playPeakHistorySize = calculatePeakHistorySize(playBufferSizeInByte);
 		Log.v(TAG, "Set recordPeakHistorySizes=" + recordPeakHistorySize);
+		Log.v(TAG, "Set livePeakHistorySizes=" + livePeakHistorySize);
 		Log.v(TAG, "Set playPeakHistorySizes=" + playPeakHistorySize);
 
 	}
 
+	/** Opens live channel */
+	public void becomeLiveOn() {
+		Log.v(TAG, "becomeLiveOn()");
+		if (isLiveOn()) {
+			Log.v(TAG, "Already on! Nothing to do.");
+			return;
+		}
+		liveTask = new LiveTask();
+		liveTask.execute();
+		liveStatus = Status.ACTIVE;
+		liveEventListener.onStart();
+
+		audioService.setInMute(false);
+	}
+
+	/** Stop live channel */
+	public void becomeLiveStop() {
+		Log.v(TAG, "becomeLiveStop()");
+		// Hard stop both
+		if (liveTask != null && !liveTask.isCancelled()) {
+			liveTask.cancel(false);
+		}
+
+		liveStatus = Status.INACTIVE;
+		liveEventListener.onStop();
+
+		// TODO Move this to a encapsulating service
+		audioService.setInMute(true);
+
+	}
+
+	/** Start tape channel to play */
 	public void becomePlaying() {
 		Log.v(TAG, "becomePlaying()");
 
-		if (isActive()) {
-			if (isPlaying()) {
+		if (isTapeActive()) {
+			if (isTapePlaying()) {
 				Log.v(TAG, "Already playing! Nothing to do.");
 				return;
 			}
-			if (isRecording()) {
+			if (isTapeRecording()) {
 				Log.v(TAG, "first stop recording");
 				recordTask.cancel(false);
 			}
 		}
 		playTask = new PlayTask();
 		playTask.execute();
-		mode = Mode.PLAYING;
-		status = Status.ACTIVE;
-		eventListener.onStartPlaying();
+		tapeMode = Mode.PLAYING;
+		tapeStatus = Status.ACTIVE;
+		tapeEventListener.onStartPlaying();
 	}
 
-	public void becomeRecording() {
+	/** Switch tape channel to recording mode */
+	public void becomeTapeRecording() {
 		Log.v(TAG, "becomeRecording()");
-		if (isActive()) {
-			if (isRecording()) {
+		if (isTapeActive()) {
+			if (isTapeRecording()) {
 				Log.v(TAG, "Already recoding! Nothing to do.");
 				return;
 			}
-			if (isPlaying()) {
+			if (isTapePlaying()) {
 				Log.v(TAG, "first stop playing");
 				playTask.cancel(true);
 			}
 		}
 		recordTask = new RecordTask();
 		recordTask.execute();
-		status = Status.ACTIVE;
-		mode = Mode.RECORDING;
-		eventListener.onStartRecording();
+
+		tapeStatus = Status.ACTIVE;
+		tapeMode = Mode.RECORDING;
+		tapeEventListener.onStartRecording();
 	}
 
-	public void becomeStop() {
-		Log.v(TAG, "becomeStop()");
+	/** Stop tape channel */
+	public void becomeTapeStop() {
+		Log.v(TAG, "becomeTapeStop()");
 		// Hard stop both
 		if (recordTask != null && !recordTask.isCancelled()) {
 			recordTask.cancel(false);
@@ -427,15 +519,15 @@ public class Tapemachine {
 			playTask.cancel(true);
 		}
 
-		status = Status.INACTIVE;
-		eventListener.onStopped(mode.copy());
+		tapeStatus = Status.INACTIVE;
+		tapeEventListener.onStop(tapeMode.copy());
 	}
 
 	private int calculatePeakHistorySize(final int bufferSizeInByte) {
 		if (bufferSizeInByte > 100000)
 			return 1;
 		else
-			return (100000 - bufferSizeInByte) / 20000;
+			return ((100000 - bufferSizeInByte) / 20000) + 1;
 
 	}
 
@@ -445,32 +537,46 @@ public class Tapemachine {
 		return (short) (Short.MAX_VALUE * AudioTrack.getMaxVolume());
 	}
 
-	public boolean isActive() {
-		return status.equals(Status.ACTIVE);
+	public boolean isLiveOn() {
+		return liveStatus.equals(Status.ACTIVE);
+	}
+
+	/** TRUE, if tape channel is not stopped, otherwise FALSE. */
+	public boolean isTapeActive() {
+		return tapeStatus.equals(Status.ACTIVE);
 
 	}
 
-	public boolean isPlaying() {
-		return status.equals(Status.ACTIVE) && mode.equals(Mode.PLAYING);
+	/** TRUE, if tape channel is playing, otherwise FALSE. */
+	public boolean isTapePlaying() {
+		return tapeStatus.equals(Status.ACTIVE)
+				&& tapeMode.equals(Mode.PLAYING);
 	}
 
-	public boolean isRecording() {
-		return status.equals(Status.ACTIVE) && mode.equals(Mode.RECORDING);
+	public boolean isTapeRecording() {
+		return tapeStatus.equals(Status.ACTIVE)
+				&& tapeMode.equals(Mode.RECORDING);
 	}
 
+	public void setAudioService(final AudioService audioService) {
+		this.audioService = audioService;
+	}
+
+	/** Mute tape channel */
 	public void setTapeMute(final boolean mute) {
-		Log.v(TAG, "set mute=" + mute);
-		this.mute = mute;
+		Log.v(TAG, "set tapeMute=" + mute);
+		this.tapeMute = mute;
 		if (mute)
 			audioTrack.setStereoVolume(0f, 0f);
 		else
-			audioTrack.setStereoVolume(volume, volume);
+			audioTrack.setStereoVolume(tapeVolume, tapeVolume);
 	}
 
 	public void setTapeVolume(final float volume) {
-		Log.v(TAG, "set volume=" + volume);
-		this.volume = volume;
-		if (!mute)
+		Log.v(TAG, "set tapeVolume=" + volume);
+		this.tapeVolume = volume;
+
+		if (!tapeMute)
 			audioTrack.setStereoVolume(volume, volume);
 
 	}

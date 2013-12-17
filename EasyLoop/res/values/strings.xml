@@ -11,7 +11,10 @@
     <string name="buttonPlay">Play</string>
     <string name="inToggleOn">Muted</string>
     <string name="inToggleOff">Mute</string>
-    <string name="inSliderSlotTitle">Live</string>
+    <string name="inSliderSlotTitle">In</string>
+    <string name="liveSliderSlotTitle">Live</string>
     <string name="tapeSliderSlotTitle">Tape</string>
+    <string name="buttonOn">On</string>
+    <string name="buttonOff">Off</string>
     
 </resources>

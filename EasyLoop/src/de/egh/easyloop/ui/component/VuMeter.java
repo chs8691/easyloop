@@ -24,14 +24,14 @@ public class VuMeter extends View implements
 
 	private class Color {
 		private class Background {
-			private static final int UNMUTED = 0xff000000;
 			private static final int MUTED = 0xff7D7D7D;
+			private static final int UNMUTED = 0xff000000;
 		}
 
 		private class Needle {
-			private static final int VALUE = 0xDB;
-			private static final int BASE = 0xFF000000 | VALUE << 16
-					| VALUE << 8 | VALUE;
+			private static final int AVALUE = 0xDB;
+			private static final int BASE = 0xFF000000 | AVALUE << 16
+					| AVALUE << 8 | AVALUE;
 		}
 	}
 
@@ -40,12 +40,12 @@ public class VuMeter extends View implements
 	 * used to define how the shape is drawn.
 	 */
 	public class ShapeHolder {
-		private float x = 0, y = 0;
-		private ShapeDrawable shape;
+		private float alpha = 1f;
 		private int color;
 		private RadialGradient gradient;
-		private float alpha = 1f;
 		private Paint paint;
+		private ShapeDrawable shape;
+		private float x = 0, y = 0;
 
 		public ShapeHolder(final ShapeDrawable s) {
 			shape = s;
@@ -130,16 +130,20 @@ public class VuMeter extends View implements
 
 	private Bitmap bitmap;
 
-	private Paint paint;
+	private final int color = Color.Needle.BASE;
 
 	// max input value
 	private int maxValue = 0;
 
+	private boolean mute;
+
 	private ShapeHolder needle;
 
-	private AnimatorSet s1;
+	private int offset;
 
-	private boolean mute;
+	private Paint paint;
+
+	private AnimatorSet s1;
 
 	private int threshold;
 
@@ -199,8 +203,8 @@ public class VuMeter extends View implements
 
 		// There must be a better place to create this object, but I still
 		// havn't found what I looking for...
-		if (needle == null)
-			needle = createNeedle(0);
+		// if (needle == null)
+		// needle = createNeedle(0);
 
 		// mute mode: more alpha
 		if (mute)
@@ -208,17 +212,12 @@ public class VuMeter extends View implements
 		else
 			needle.setAlpha(1f);
 
-		// Overdrive: red needle for the loudest 10 %
-		// int darkColor = 0xff000000 | red/4 << 16 | green/4 << 8 | blue/4;
-		final int color = Color.Needle.BASE;
-		final int offset;
-
 		if (needle.getX() > threshold) {
 			final float width = (getWidth() - NEEDLE_WIDTH - threshold);
 			final float x = needle.getX() - threshold;
-			offset = (int) (Color.Needle.VALUE * (1f - (x / width)));
-			needle.setColor(0xFF000000 | Color.Needle.VALUE << 16 | offset << 8
-					| offset);
+			offset = (int) (Color.Needle.AVALUE * (1f - (x / width)));
+			needle.setColor(0xFF000000 | Color.Needle.AVALUE << 16
+					| offset << 8 | offset);
 		} else
 			needle.setColor(color);
 
@@ -227,6 +226,17 @@ public class VuMeter extends View implements
 		needle.getShape().draw(canvas);
 		canvas.restore();
 
+	}
+
+	@Override
+	protected void onLayout(final boolean changed, final int left,
+			final int top, final int right, final int bottom) {
+
+		super.onLayout(changed, left, top, right, bottom);
+
+		// We are before first onDraw, so onDraw can use the needle.
+		if (needle == null)
+			needle = createNeedle(0);
 	}
 
 	@Override
@@ -267,8 +277,14 @@ public class VuMeter extends View implements
 
 	}
 
-	/** New value for the VU meter. setValueMax must be set before */
+	/**
+	 * New value for the VU meter. setValueMax must be set before. If called
+	 * before created the needle, nothing will be done.
+	 */
 	public void setValue(final int value) {
+
+		if (needle == null)
+			return;
 
 		if (value < 0 || value > maxValue)
 			throw new InvalidParameterException(

@@ -1,37 +1,141 @@
 package de.egh.easyloop.logic;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import de.egh.easyloop.MainActivity;
-import de.egh.easyloop.R;
+import de.egh.easyloop.logic.audio.destination.AudioDestination;
+import de.egh.easyloop.logic.audio.destination.RecorderDestination;
+import de.egh.easyloop.logic.audio.destination.SpeakerDestination;
+import de.egh.easyloop.logic.audio.source.AudioSource;
+import de.egh.easyloop.logic.audio.source.MicSource;
+import de.egh.easyloop.logic.audio.source.PlayerSource;
 
 public class SessionService extends Service {
-	interface EventListener extends Tapemachine.EventListener {
+
+	/** Task for reading and dispatching the input signal. */
+	private class MicTask extends AsyncTask<Null, Null, Null> {
+		private static final String TAG = "MicTask";
+		private final Null aNull = new Null();
+		private AudioSource micSource;
+
+		@Override
+		protected Null doInBackground(final Null... params) {
+			Log.v(TAG, "doInBackgroundTask()");
+
+			try {
+
+				micSource.start();
+
+				while (!isCancelled()) {
+
+					micSource.read();
+
+					// Route to running recorder
+					if (recorder.isOpen())
+						recorder.write(micSource.getReadResult());
+
+					if (liveDestination.isOpen())
+						liveDestination.write(micSource.getReadResult());
+
+					publishProgress(aNull);
+				}
+
+				Log.v(TAG, "In cancelled. Stop mic now...");
+				micSource.stop();
+
+				// Last value event must be 0
+				publishProgress(aNull);
+
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
+
+			Log.v(TAG, "doInBackgroundTask() leave.");
+			return aNull;
+		}
+
+		@Override
+		protected void onPreExecute() {
+			Log.v(TAG, "onPreExecute()");
+
+			micSource = new MicSource();
+		}
+
+		@Override
+		protected void onProgressUpdate(final Null... params) {
+			if (recorder.isOpen())
+				sessionEventListener.onTapeLevelChanged(recorder
+						.getActualMaxLevel());
+			if (liveDestination.isOpen())
+				sessionEventListener.onLiveLevelChanged(liveDestination
+						.getActualMaxLevel());
+
+			sessionEventListener
+					.onInLevelChanged(micSource.getActualMaxLevel());
+		}
 
 	}
 
-	/** Null-Object for convenience */
-	private class NullSessionEventListener implements SessionEventListener {
+	/** Dummy class */
+	private class Null {
+	}
+
+	/** Task for playing the recording. */
+	private class PlayerTask extends AsyncTask<Null, Null, Null> {
+		private static final String TAG = "PlayerTask";
+		private final Null aNull = new Null();
+
+		private AudioSource player;
 
 		@Override
-		public void onPlay() {
+		protected Null doInBackground(final Null... params) {
+			Log.v(TAG, "doInBackground()");
+
+			try {
+
+				player.start();
+
+				while (!isCancelled()) {
+
+					player.read();
+
+					if (tapeDestination.isOpen())
+						tapeDestination.write(player.getReadResult());
+
+					publishProgress(aNull);
+				}
+
+				tapeDestination.close();
+
+				player.stop();
+
+				Log.v(TAG, "doInBackgroundTask() leave.");
+
+				publishProgress(aNull);
+
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
+
+			return aNull;
 		}
 
 		@Override
-		public void onRecording() {
+		protected void onPreExecute() {
+			Log.v(TAG, "onPreExecute()");
+			player = new PlayerSource(SessionService.this);
+
 		}
 
 		@Override
-		public void onStop() {
-		}
-
-		@Override
-		public void onTapeLevelChanged(final short level) {
+		protected void onProgressUpdate(final Null... params) {
+			if (tapeDestination.isOpen())
+				sessionEventListener.onTapeLevelChanged(tapeDestination
+						.getActualMaxLevel());
 		}
 
 	}
@@ -50,7 +154,17 @@ public class SessionService extends Service {
 
 	/** Events, which occurred in SessionService */
 	public interface SessionEventListener {
-		/** Playin started */
+		/**
+		 * In channel signal has been changed. Use this for showing the level.
+		 */
+		public void onInLevelChanged(short level);
+
+		/**
+		 * live output signal has been changed. Use this for showing the level.
+		 */
+		public void onLiveLevelChanged(short level);
+
+		/** Started playing */
 		public void onPlay();
 
 		/** Recording started */
@@ -60,88 +174,147 @@ public class SessionService extends Service {
 		public void onStop();
 
 		/**
-		 * tape machines output signal has been changed. Use this for showing
-		 * the level.
+		 * tape output signal has been changed. Use this for showing the level.
 		 */
 		public void onTapeLevelChanged(short Level);
 	}
 
-	private static final String TAG = "SessionService";
-	private final IBinder mBinder = new ServiceBinder();
-
 	private static final int ONGOING_PLAY_NOTIFICATION = 1;
 
 	private static final int ONGOING_RECORD_NOTIFICATION = 2;
-	private final Tapemachine tapemachine;
-	// private final Mainsignal mainsignal;
+
+	private static final String TAG = "SessionService";
+	private boolean foreground;
+
+	private final AudioDestination liveDestination;
+
+	private final IBinder mBinder = new ServiceBinder();
+
+	private MicTask micTask;
+
+	private PlayerTask playerTask;
+
+	private final AudioDestination recorder;
 
 	private SessionEventListener sessionEventListener;
+	private final AudioDestination tapeDestination;
 
 	public SessionService() {
 		Log.v(TAG, "SessionService()");
-		tapemachine = new Tapemachine(new Tapemachine.EventListener() {
 
-			@Override
-			public void onLevelTapeChanged(final short level) {
-				sessionEventListener.onTapeLevelChanged(level);
-			}
+		sessionEventListener = createSessionEventListenerDummy();
 
-			@Override
-			public void onStartPlaying() {
-				final Notification notification = new Notification(
-						R.drawable.ic_launcher, "Playing",
-						System.currentTimeMillis());
-				final Intent notificationIntent = new Intent(
-						SessionService.this, MainActivity.class);
-				final PendingIntent pendingIntent = PendingIntent.getActivity(
-						SessionService.this, 0, notificationIntent, 0);
-				notification.setLatestEventInfo(SessionService.this, "Playing",
-						"Play in loop mode", pendingIntent);
-				startForeground(ONGOING_PLAY_NOTIFICATION, notification);
-				sessionEventListener.onPlay();
+		recorder = new RecorderDestination(this);
 
-			}
+		tapeDestination = new SpeakerDestination();
+		tapeDestination.setVolume(100);
+		tapeDestination.mute(false);
 
-			@Override
-			public void onStartRecording() {
-				final Notification notification = new Notification(
-						R.drawable.ic_launcher, "Recording",
-						System.currentTimeMillis());
-				final Intent notificationIntent = new Intent(
-						SessionService.this, MainActivity.class);
-				final PendingIntent pendingIntent = PendingIntent.getActivity(
-						SessionService.this, 0, notificationIntent, 0);
-				notification.setLatestEventInfo(SessionService.this,
-						"Recording", "Recording from mic/line in",
-						pendingIntent);
-				startForeground(ONGOING_RECORD_NOTIFICATION, notification);
-				sessionEventListener.onRecording();
-			}
-
-			@Override
-			public void onStopped(final Tapemachine.Mode fromMode) {
-				stopForeground(true);
-				sessionEventListener.onStop();
-
-			}
-		}, this);
-		// mainsignal = new Mainsignal();
-
-		sessionEventListener = new NullSessionEventListener();
+		liveDestination = new SpeakerDestination();
+		liveDestination.setVolume(100);
+		liveDestination.mute(true);
 
 	}
 
-	/** Returns the most possible value */
-	public short getMaxLevel() {
-		return tapemachine.getMaxValue();
+	public boolean canPlay() {
+		return true;
+	}
+
+	/** Returns TRUE, if recording is possible. Otherwise FALSE. */
+	public boolean canRecord() {
+		return micTask != null && !micTask.isCancelled();
+	}
+
+	private SessionEventListener createSessionEventListenerDummy() {
+		return new SessionEventListener() {
+
+			@Override
+			public void onInLevelChanged(final short level) {
+			}
+
+			@Override
+			public void onLiveLevelChanged(final short Level) {
+			}
+
+			@Override
+			public void onPlay() {
+			}
+
+			@Override
+			public void onRecording() {
+			}
+
+			@Override
+			public void onStop() {
+			}
+
+			@Override
+			public void onTapeLevelChanged(final short level) {
+			}
+		};
+	}
+
+	private void foregroundModeOff() {
+		// if (foreground) {
+		// stopForeground(true);
+		// foreground = false;
+		// }
+	}
+
+	/**
+	 * Set service as foreground priority, if a background task is running,
+	 * otherwise remove foreground priority. This method shoud be called, every
+	 * time a async task has been started or stopped.
+	 * 
+	 * @param notification
+	 *            Notification must be set, if called for starting a task. For
+	 *            stopping task, value will be ignored.
+	 */
+	private void foregroundModeOn() {
+		// if (!foreground) {
+		// final Notification notification = new Notification(
+		// R.drawable.ic_launcher, "Active",
+		// System.currentTimeMillis());
+		// final Intent notificationIntent = new Intent(SessionService.this,
+		// MainActivity.class);
+		// final PendingIntent pendingIntent = PendingIntent.getActivity(
+		// SessionService.this, 0, notificationIntent, 0);
+		// notification.setLatestEventInfo(SessionService.this, "Singnal",
+		// "Deactivated", pendingIntent);
+		//
+		// startForeground(ONGOING_RECORD_NOTIFICATION, notification);
+		// foreground = true;
+		// }
+
+	}
+
+	public int getLiveVolume() {
+		return liveDestination.getVolume();
+	}
+
+	public int getTapeVolume() {
+		return tapeDestination.getVolume();
+	}
+
+	public boolean isInOpen() {
+		return micTask != null && micTask.getStatus() == Status.RUNNING;
+	}
+
+	public boolean isLiveMuted() {
+		return liveDestination.isMuted();
 	}
 
 	public boolean isPlaying() {
-		return tapemachine.isPlaying();
+		return playerTask != null
+				&& playerTask.getStatus() == AsyncTask.Status.RUNNING;
 	}
 
 	public boolean isRecording() {
-		return tapemachine.isRecording();
+		return recorder.isOpen();
+	}
+
+	public boolean isTapeMuted() {
+		return tapeDestination.isMuted();
 	}
 
 	@Override
@@ -153,7 +326,7 @@ public class SessionService extends Service {
 	@Override
 	public int onStartCommand(final Intent intent, final int flags,
 			final int startId) {
-		Log.v(TAG, "onStartCommand()");
+		Log.v(TAG, "onStartCommand( ) ");
 
 		// We don't want this service to continue running after canceled by the
 		// system.
@@ -165,28 +338,33 @@ public class SessionService extends Service {
 		Log.v(TAG, "onUnbind()");
 
 		// end service, if not in use
-		if (!tapemachine.isActive()) {
+		if (recorder != null && !recorder.isOpen()) {
 			stopSelf();
 		}
 
 		return super.onUnbind(intent);
 	}
 
-	public void play() {
-		tapemachine.becomePlaying();
-	}
-
-	public void record() {
-		tapemachine.becomeRecording();
-	}
-
 	public void removeSessionEventListener() {
-		this.sessionEventListener = new NullSessionEventListener();
+		this.sessionEventListener = createSessionEventListenerDummy();
 	}
 
-	/** If TRUE, mute the play signal, otherwise un-mute. */
-	public void setMute(final boolean mute) {
-		tapemachine.setTapeMute(mute);
+	/** Must set set before first usage of live in switching on/off */
+	public void setAudioService(final AudioService audioService) {
+		// tapemachine.setAudioService(audioService);
+	}
+
+	/**
+	 * If TRUE, mutes the play signal, otherwise un-mute. Only the audio
+	 * destination will be set to mute, so the level is still fired.
+	 */
+	public void setLiveMute(final boolean mute) {
+		liveDestination.mute(mute);
+	}
+
+	/** Adjust tape's output volume. */
+	public void setLiveVolume(final int volume) {
+		liveDestination.setVolume(volume);
 	}
 
 	public void setSessionEventListener(
@@ -195,12 +373,93 @@ public class SessionService extends Service {
 
 	}
 
-	/** */
-	public void setVolume(final int volume) {
-		tapemachine.setTapeVolume(volume / 100f);
+	/**
+	 * If TRUE, mutes the play signal, otherwise un-mute. Only the audio
+	 * destination will be set to mute, so the level is still fired.
+	 */
+	public void setTapeMute(final boolean mute) {
+		tapeDestination.mute(mute);
 	}
 
-	public void stop() {
-		tapemachine.becomeStop();
+	/** Adjust tape's output volume. */
+	public void setTapeVolume(final int volume) {
+		tapeDestination.setVolume(volume);
 	}
+
+	/** Switch in signal on or off */
+	public void switchIn(final boolean on) {
+		Log.v(TAG, "switchIn() " + on);
+
+		if (on) {
+			if (micTask == null
+					|| micTask.getStatus() == AsyncTask.Status.FINISHED) {
+				micTask = new MicTask();
+				micTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+						new Null());
+				// Always open speaker output for this channel
+				liveDestination.open();
+			}
+			// else inTask != null: Already running, nothing to do
+
+		} else {
+			if (micTask != null) {
+				micTask.cancel(true);
+
+				// Always close speaker out for this channel
+				liveDestination.close();
+			}
+			// else Nothing to do, already off.
+		}
+
+	}
+
+	public void tapePlay() {
+		Log.v(TAG, "tapePlay()");
+		// Stop actual recording
+		if (recorder.isOpen()) {
+			recorder.close();
+		}
+
+		tapeDestination.open();
+
+		if (playerTask != null
+				&& playerTask.getStatus() == AsyncTask.Status.RUNNING) {
+			Log.v(TAG, "PlayerTask already playing: leave tapePlay()");
+
+			return;
+		}
+		playerTask = new PlayerTask();
+		playerTask
+				.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new Null());
+
+		sessionEventListener.onPlay();
+
+	}
+
+	public void tapeRecord() {
+		Log.v(TAG, "tapeRecord()");
+		if (playerTask != null
+				&& playerTask.getStatus() != AsyncTask.Status.FINISHED)
+			playerTask.cancel(true);
+
+		if (recorder.isOpen())
+			recorder.close();
+		recorder.open();
+
+		sessionEventListener.onRecording();
+
+	}
+
+	public void tapeStop() {
+		Log.v(TAG, "tapeStop()");
+		if (recorder.isOpen())
+			recorder.close();
+
+		if (playerTask != null)
+			playerTask.cancel(true);
+
+		sessionEventListener.onStop();
+
+	}
+
 }

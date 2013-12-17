@@ -23,21 +23,12 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="10"
                 android:text="Slot" />
-
-            <TextView
-                android:id="@+id/sliderView_level"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="10"
-                android:gravity="left"
-                android:text="100" />
         </LinearLayout>
 
         <de.egh.easyloop.ui.component.VuMeter
             android:id="@+id/sliderView_vuMeter"
             android:layout_width="match_parent"
             android:layout_height="20dp"
-
             android:background="#ff000000" />
 
         <SeekBar
@@ -52,8 +43,16 @@
         android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:layout_weight="60"
-        android:text="ToggleButton"
         android:textOff="@string/inToggleOff"
         android:textOn="@string/inToggleOn" />
+
+    <ToggleButton
+        android:id="@+id/sliderView_switchToggle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="60"
+        android:textOff="@string/buttonOff"
+        android:textOn="@string/buttonOn" />
 
 </LinearLayout>

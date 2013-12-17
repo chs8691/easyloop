@@ -8,37 +8,6 @@
     android:orientation="vertical"
     tools:context=".MainActivity" >
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="9" >
-
-        <ToggleButton
-            android:id="@+id/buttonPlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="10"
-            android:text="@string/buttonPlay"
-            android:textOff="@string/buttonPlay"
-            android:textOn="@string/buttonPlay" />
-
-        <ToggleButton
-            android:id="@+id/buttonRecord"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="10"
-            android:text="@string/buttonRecord"
-            android:textOff="@string/buttonRecord"
-            android:textOn="@string/buttonRecord" />
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/buttonStop"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="9"
-        android:text="@string/buttonStop" />
-
     <de.egh.easyloop.ui.component.SliderSlot
         android:id="@+id/inSliderSlot"
         android:layout_width="match_parent"
@@ -48,11 +17,51 @@
         easyloop:sliderSlot_title="@string/inSliderSlotTitle" />
 
     <de.egh.easyloop.ui.component.SliderSlot
+        android:id="@+id/liveSliderSlot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="10"
+        easyloop:sliderSlot_seekBarEnabled="true"
+        easyloop:sliderSlot_title="@string/liveSliderSlotTitle" />
+
+    <de.egh.easyloop.ui.component.SliderSlot
         android:id="@+id/tapeSliderSlot"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="10"
         easyloop:sliderSlot_seekBarEnabled="true"
         easyloop:sliderSlot_title="@string/tapeSliderSlotTitle" />
+
+    <Button
+        android:id="@+id/buttonStop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="8"
+        android:text="@string/buttonStop" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="8"
+        android:orientation="horizontal" >
+
+        <ToggleButton
+            android:id="@+id/buttonPlay"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            android:text="@string/buttonPlay"
+            android:textOff="@string/buttonPlay"
+            android:textOn="@string/buttonPlay" />
+
+        <ToggleButton
+            android:id="@+id/buttonRecord"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            android:text="@string/buttonRecord"
+            android:textOff="@string/buttonRecord"
+            android:textOn="@string/buttonRecord" />
+    </LinearLayout>
 
 </LinearLayout>
