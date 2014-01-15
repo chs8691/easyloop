@@ -4,6 +4,14 @@
     <declare-styleable name="sliderSlot">
         <attr name="sliderSlot_title" format="string" />
         <attr name="sliderSlot_seekBarEnabled" format="boolean" />
-        </declare-styleable>
+    </declare-styleable>
+    <declare-styleable name="tapeButton">
+
+        <!-- Type can be record or play button -->
+        <attr name="tapeButtonType" format="string" />
+
+        <!-- Button can be checked like a toggel button -->
+        <attr name="tapeButtonStateChecked" format="boolean" />
+    </declare-styleable>
 
 </resources>

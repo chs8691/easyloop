@@ -55,7 +55,13 @@ public class PeakStrategy {
 
 	}
 
-	/** Calculates the maximum value. */
+	/**
+	 * Calculates the maximum value.
+	 * 
+	 * @param level
+	 *            short[] may not be null.
+	 * @return short with new calculated maximum.
+	 */
 	public short getMax(final short[] level) {
 		// remove oldest max value
 		// buffer size * history size is constant

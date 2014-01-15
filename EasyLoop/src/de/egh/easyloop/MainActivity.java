@@ -12,13 +12,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ToggleButton;
 import de.egh.easyloop.helper.Util;
 import de.egh.easyloop.logic.AudioService;
 import de.egh.easyloop.logic.SessionService;
 import de.egh.easyloop.logic.SessionService.SessionEventListener;
 import de.egh.easyloop.ui.component.SliderSlot;
 import de.egh.easyloop.ui.component.SliderSlot.EventListener;
+import de.egh.easyloop.ui.components.tapebutton.TapeButtonView;
+import de.egh.easyloop.ui.components.tapebutton.TapeButtonView.Status;
 
 public class MainActivity extends Activity {
 
@@ -44,12 +45,12 @@ public class MainActivity extends Activity {
 
 	private SliderSlot liveSliderSlot;
 
-	private ToggleButton play;
-	private ToggleButton record;
+	private TapeButtonView play1Button;
+	private TapeButtonView record1Button;
 	private SessionService.SessionEventListener sessionEventListener;
+
 	private SessionService sessionService;
 	private boolean sessionServiceBound = false;
-
 	/** Defines callbacks for service binding, passed to bindService() */
 
 	private ServiceConnection sessionServiceConnection;
@@ -77,6 +78,25 @@ public class MainActivity extends Activity {
 				// Simplest implementation of a AudioService. Only mic support.
 				sessionService.setAudioService(audioService);
 
+				// --- Record Button -----------------------//
+				record1Button.setEnabled(sessionService.canRecord());
+				record1Button
+						.setStatus(sessionService.isRecording() ? TapeButtonView.Status.RUNNING
+								: TapeButtonView.Status.STOPPED);
+				if (sessionService.isRecording())
+					record1Button.startCounterRecord(sessionService
+							.getRecorderActualTime());
+
+				// --- Play Button -------------------------//
+				play1Button.setEnabled(sessionService.canPlay());
+				play1Button
+						.setStatus(sessionService.isPlaying() ? TapeButtonView.Status.RUNNING
+								: TapeButtonView.Status.STOPPED);
+				if (sessionService.isPlaying())
+					play1Button.startCounterPlay(
+							sessionService.getPlayerDuration(),
+							sessionService.getPlayerActualTime());
+
 				sessionEventListener = new SessionEventListener() {
 					@Override
 					public void onInLevelChanged(final short level) {
@@ -89,33 +109,51 @@ public class MainActivity extends Activity {
 					}
 
 					@Override
-					public void onPlay() {
+					public void onLoopStart(final int duration) {
+						play1Button.startCounterPlay(duration, 0);
+					}
+
+					@Override
+					public void onPlayStart() {
 						Log.v(TAG, "onStartPlaying()");
 
-						uiElementsOnStop();
-
-						play.setChecked(true);
-						play.setEnabled(false);
+						play1Button.setStatus(Status.RUNNING);
+						play1Button.setEnabled(sessionService.canPlay());
 
 					}
 
 					@Override
-					public void onRecording() {
+					public void onPlayStop() {
+						Log.v(TAG, "onPlayStop()");
+
+						play1Button.setStatus(Status.STOPPED);
+						play1Button.setEnabled(sessionService.canPlay());
+
+					}
+
+					@Override
+					public void onRecordStart() {
 						Log.v(TAG, "onStartrecording()");
 
-						uiElementsOnStop();
-
-						record.setChecked(true);
-						record.setEnabled(false);
+						record1Button.setEnabled(true);
+						record1Button.setStatus(Status.RUNNING);
+						record1Button.startCounterRecord(0);
 
 						inSliderSlot.enableSwitchButton(false);
 					}
 
 					@Override
-					public void onStop() {
-						Log.v(TAG, "onStop()");
+					public void onRecordStop() {
+						Log.v(TAG, "onRecordStop()");
 
-						uiElementsOnStop();
+						record1Button.setStatus(Status.STOPPED);
+						record1Button.setEnabled(sessionService.canRecord());
+
+						// Created file can now be play backed
+						play1Button.setEnabled(sessionService.canPlay());
+
+						inSliderSlot.enableSwitchButton(true);
+
 					}
 
 					@Override
@@ -126,13 +164,6 @@ public class MainActivity extends Activity {
 				};
 
 				sessionService.setSessionEventListener(sessionEventListener);
-
-				// Initialize Buttons
-				record.setChecked(sessionService.isRecording());
-				record.setEnabled(sessionService.canRecord()
-						&& !sessionService.isRecording());
-				play.setChecked(sessionService.isPlaying());
-				play.setEnabled(!sessionService.isPlaying());
 
 				// --- Mic In Slot -------------------------//
 				inSliderSlot.setSwitchButton(sessionService.isInOpen());
@@ -148,7 +179,7 @@ public class MainActivity extends Activity {
 					@Override
 					public void onSwitchButtonToggled(final boolean set) {
 						sessionService.switchIn(set);
-						record.setEnabled(set);
+						record1Button.setEnabled(set);
 					}
 
 					@Override
@@ -222,29 +253,10 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		record = (ToggleButton) findViewById(R.id.buttonRecord);
-		play = (ToggleButton) findViewById(R.id.buttonPlay);
-		stop = (Button) findViewById(R.id.buttonStop);
-
 		audioManager = (AudioManager) this
 				.getSystemService(Context.AUDIO_SERVICE);
 
-		record.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(final View v) {
-				Log.v(TAG, "Record:onCLick()");
-				sessionService.tapeRecord();
-			}
-		});
-		play.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(final View v) {
-				Log.v(TAG, "Play:onCLick()");
-				sessionService.tapePlay();
-			}
-		});
+		stop = (Button) findViewById(R.id.buttonStop);
 		stop.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -252,6 +264,41 @@ public class MainActivity extends Activity {
 				Log.v(TAG, "Stop:onCLick()");
 				sessionService.tapeStop();
 			}
+		});
+
+		// --- Tape buttons ---//
+		play1Button = (TapeButtonView) findViewById(R.id.play1Button);
+
+		play1Button.setEventListener(new TapeButtonView.EventListener() {
+
+			@Override
+			public void onRun() {
+				Log.v(TAG, "play1Button:onRun()");
+				sessionService.tapePlay();
+			}
+
+			@Override
+			public void onStop() {
+				Log.v(TAG, "play1Button:onStop()");
+				sessionService.tapeStop();
+			}
+		});
+
+		record1Button = (TapeButtonView) findViewById(R.id.record1Button);
+		record1Button.setEventListener(new TapeButtonView.EventListener() {
+
+			@Override
+			public void onRun() {
+				Log.v(TAG, "record1Button:onRun()");
+				sessionService.tapeRecord();
+			}
+
+			@Override
+			public void onStop() {
+				Log.v(TAG, "record1Button:onStop()");
+				sessionService.tapeStop();
+			}
+
 		});
 
 		// Up- and down buttons connect to volume
@@ -316,12 +363,14 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	/** Update the UI components after a service's change. */
 	private void uiElementsOnStop() {
-		record.setChecked(false);
-		record.setEnabled(sessionService.canRecord());
 
-		play.setChecked(false);
-		play.setEnabled(sessionService.canPlay());
+		record1Button.setStatus(Status.STOPPED);
+		record1Button.setEnabled(false);
+
+		play1Button.setStatus(Status.STOPPED);
+		play1Button.setEnabled(sessionService.canPlay());
 
 		inSliderSlot.enableSwitchButton(true);
 	}

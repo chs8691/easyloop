@@ -10,7 +10,7 @@ public class ReadResultImplementation implements ReadResult {
 
 	@Override
 	public short[] getBuffer() {
-		return buffer;
+		return buffer.clone();
 	}
 
 	@Override

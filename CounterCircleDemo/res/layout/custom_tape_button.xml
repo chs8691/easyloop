@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/customTapebuttonView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    android:padding="10dp" >
+
+
+    <de.egh.easyloop.ui.components.tapebutton.ButtonIconView
+        android:id="@+id/customTapebuttonButtonIcon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center_vertical" />
+
+    <de.egh.easyloop.ui.components.tapebutton.CircleCounterView
+        android:id="@+id/customTapebuttonCircleCounter"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/customTapebuttonButtonIcon" />
+    
+</RelativeLayout>

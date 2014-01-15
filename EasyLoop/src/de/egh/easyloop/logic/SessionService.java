@@ -6,11 +6,13 @@ import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import de.egh.easyloop.logic.audio.destination.AudioDestination;
 import de.egh.easyloop.logic.audio.destination.RecorderDestination;
 import de.egh.easyloop.logic.audio.destination.SpeakerDestination;
 import de.egh.easyloop.logic.audio.source.AudioSource;
+import de.egh.easyloop.logic.audio.source.AudioSource.LoopEventListener;
 import de.egh.easyloop.logic.audio.source.MicSource;
 import de.egh.easyloop.logic.audio.source.PlayerSource;
 
@@ -84,12 +86,44 @@ public class SessionService extends Service {
 	private class Null {
 	}
 
-	/** Task for playing the recording. */
-	private class PlayerTask extends AsyncTask<Null, Null, Null> {
+	/**
+	 * Progress type for PlayerTask to handle the loops. With every new loop of
+	 * the played audio source, the SessionService consumer will be informed
+	 * about this.
+	 */
+	private class PlayerProgress {
+
+		/** Loop duration. Will be set in the AsyncTask by the PlayerSource. */
+		public int asyncTaskDuration = AudioSource.NO_DURATION;
+
+		/** Loop counter. Will be set in the AsyncTask by the PlayerSource. */
+		public int asyncTaskloopCount = 0;
+
+		/** Propagated loop counter. Will be set in the UI task. */
+		public int uiTaskProgressCount = 0;
+	}
+
+	/**
+	 * Task for playing the recording. The second type is the play duration as
+	 * Integer. It will be set on start and with ever new loop. Otherwise it is
+	 * null.
+	 * 
+	 */
+	private class PlayerTask extends AsyncTask<Null, PlayerProgress, Null> {
 		private static final String TAG = "PlayerTask";
 		private final Null aNull = new Null();
 
-		private AudioSource player;
+		private final AudioSource player;
+
+		/**
+		 * Will be set, if a new loop is started and will be nulled, after
+		 * firing this event.
+		 */
+		private final PlayerProgress playerProgress = new PlayerProgress();
+
+		public PlayerTask(final AudioSource player) {
+			this.player = player;
+		}
 
 		@Override
 		protected Null doInBackground(final Null... params) {
@@ -99,6 +133,8 @@ public class SessionService extends Service {
 
 				player.start();
 
+				// publishProgress(playerProgress);
+
 				while (!isCancelled()) {
 
 					player.read();
@@ -106,7 +142,7 @@ public class SessionService extends Service {
 					if (tapeDestination.isOpen())
 						tapeDestination.write(player.getReadResult());
 
-					publishProgress(aNull);
+					publishProgress(playerProgress);
 				}
 
 				tapeDestination.close();
@@ -115,7 +151,7 @@ public class SessionService extends Service {
 
 				Log.v(TAG, "doInBackgroundTask() leave.");
 
-				publishProgress(aNull);
+				publishProgress(playerProgress);
 
 			} catch (final Exception e) {
 				e.printStackTrace();
@@ -127,17 +163,37 @@ public class SessionService extends Service {
 		@Override
 		protected void onPreExecute() {
 			Log.v(TAG, "onPreExecute()");
-			player = new PlayerSource(SessionService.this);
+			player.setLoopEventListener(new LoopEventListener() {
+
+				@Override
+				public void onNewLoopStart(final int duration) {
+					playerProgress.asyncTaskDuration = duration;
+					playerProgress.asyncTaskloopCount++;
+				}
+			});
 
 		}
 
 		@Override
-		protected void onProgressUpdate(final Null... params) {
+		protected void onProgressUpdate(
+				final PlayerProgress... playerProgresses) {
+
+			// Update level view with every new buffer content
 			if (tapeDestination.isOpen())
 				sessionEventListener.onTapeLevelChanged(tapeDestination
 						.getActualMaxLevel());
-		}
 
+			// Start counter with every new loop
+			// If new loop fire its duration
+			if (playerProgresses[0].asyncTaskDuration != AudioSource.NO_DURATION
+					&& playerProgresses[0].asyncTaskloopCount > playerProgresses[0].uiTaskProgressCount) {
+				// Mark playerProgress as processed
+				playerProgresses[0].uiTaskProgressCount = playerProgresses[0].asyncTaskloopCount;
+				sessionEventListener
+						.onLoopStart(playerProgresses[0].asyncTaskDuration);
+			}
+
+		}
 	}
 
 	/**
@@ -164,14 +220,30 @@ public class SessionService extends Service {
 		 */
 		public void onLiveLevelChanged(short level);
 
-		/** Started playing */
-		public void onPlay();
+		/**
+		 * Event started new looping
+		 * 
+		 * @param duration
+		 *            Integer with duration of this loop in milliseconds
+		 */
+		public void onLoopStart(int duration);
+
+		/**
+		 * Event started playing
+		 * 
+		 * @param asyncTaskDuration
+		 *            Integer with duration in milliseconds
+		 */
+		public void onPlayStart();
+
+		/** Playing stopped */
+		public void onPlayStop();
 
 		/** Recording started */
-		public void onRecording();
+		public void onRecordStart();
 
-		/** Tape machine stopped (playing or recording) */
-		public void onStop();
+		/** Recording stopped */
+		public void onRecordStop();
 
 		/**
 		 * tape output signal has been changed. Use this for showing the level.
@@ -184,19 +256,21 @@ public class SessionService extends Service {
 	private static final int ONGOING_RECORD_NOTIFICATION = 2;
 
 	private static final String TAG = "SessionService";
-	private boolean foreground;
 
+	private boolean foreground;
 	private final AudioDestination liveDestination;
 
 	private final IBinder mBinder = new ServiceBinder();
 
 	private MicTask micTask;
 
+	private PlayerSource player;
+
 	private PlayerTask playerTask;
 
-	private final AudioDestination recorder;
-
+	private final RecorderDestination recorder;
 	private SessionEventListener sessionEventListener;
+
 	private final AudioDestination tapeDestination;
 
 	public SessionService() {
@@ -217,7 +291,11 @@ public class SessionService extends Service {
 	}
 
 	public boolean canPlay() {
-		return true;
+		if (player == null)
+			return new PlayerSource(this).isAvailable();
+		else
+			return player.isAvailable();
+
 	}
 
 	/** Returns TRUE, if recording is possible. Otherwise FALSE. */
@@ -237,15 +315,23 @@ public class SessionService extends Service {
 			}
 
 			@Override
-			public void onPlay() {
+			public void onLoopStart(final int duration) {
 			}
 
 			@Override
-			public void onRecording() {
+			public void onPlayStart() {
 			}
 
 			@Override
-			public void onStop() {
+			public void onPlayStop() {
+			}
+
+			@Override
+			public void onRecordStart() {
+			}
+
+			@Override
+			public void onRecordStop() {
 			}
 
 			@Override
@@ -290,6 +376,18 @@ public class SessionService extends Service {
 
 	public int getLiveVolume() {
 		return liveDestination.getVolume();
+	}
+
+	public int getPlayerActualTime() {
+		return player.getActualTime();
+	}
+
+	public int getPlayerDuration() {
+		return player.getDuration();
+	}
+
+	public int getRecorderActualTime() {
+		return recorder.getActualTime();
 	}
 
 	public int getTapeVolume() {
@@ -338,8 +436,16 @@ public class SessionService extends Service {
 		Log.v(TAG, "onUnbind()");
 
 		// end service, if not in use
-		if (recorder != null && !recorder.isOpen()) {
+		if (!isPlaying() && !isRecording()) {
 			stopSelf();
+		}
+
+		// Make notification
+		else {
+			final NotificationCompat.Builder builder = new NotificationCompat.Builder(
+					getApplicationContext()).setSmallIcon(R.d)
+			
+			// startForeground(ONGOING_NOTIFICATION_ID, notification);
 		}
 
 		return super.onUnbind(intent);
@@ -418,6 +524,7 @@ public class SessionService extends Service {
 		// Stop actual recording
 		if (recorder.isOpen()) {
 			recorder.close();
+			sessionEventListener.onRecordStop();
 		}
 
 		tapeDestination.open();
@@ -428,37 +535,43 @@ public class SessionService extends Service {
 
 			return;
 		}
-		playerTask = new PlayerTask();
+
+		player = new PlayerSource(this);
+		playerTask = new PlayerTask(player);
 		playerTask
 				.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new Null());
 
-		sessionEventListener.onPlay();
+		sessionEventListener.onPlayStart();
 
 	}
 
 	public void tapeRecord() {
 		Log.v(TAG, "tapeRecord()");
 		if (playerTask != null
-				&& playerTask.getStatus() != AsyncTask.Status.FINISHED)
+				&& playerTask.getStatus() != AsyncTask.Status.FINISHED) {
 			playerTask.cancel(true);
+			sessionEventListener.onPlayStop();
+		}
 
 		if (recorder.isOpen())
 			recorder.close();
 		recorder.open();
 
-		sessionEventListener.onRecording();
+		sessionEventListener.onRecordStart();
 
 	}
 
 	public void tapeStop() {
 		Log.v(TAG, "tapeStop()");
-		if (recorder.isOpen())
+		if (recorder.isOpen()) {
 			recorder.close();
+			sessionEventListener.onRecordStop();
+		}
 
-		if (playerTask != null)
+		if (playerTask != null) {
 			playerTask.cancel(true);
-
-		sessionEventListener.onStop();
+			sessionEventListener.onPlayStop();
+		}
 
 	}
 

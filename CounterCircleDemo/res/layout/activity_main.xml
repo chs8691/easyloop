@@ -1,0 +1,65 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:easyloop="http://schemas.android.com/apk/res/com.example.countercircledemo"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity" >
+
+    <de.egh.easyloop.ui.components.tapebutton.TapeButtonView
+        android:id="@+id/tapeButton"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/tape_button"
+        easyloop:tapeButtonType="play" />
+    
+    <de.egh.easyloop.ui.components.tapebutton.TapeButtonView
+        android:id="@+id/recordButton"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/tape_button"
+        easyloop:tapeButtonType="record" />
+    
+    <Button
+        android:id="@+id/buttonToggleActive"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:onClick="onToggleActive"
+        android:text="Toggle active" />
+
+    <Button
+        android:id="@+id/buttonCountIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClickSetCountIn"
+        android:text="Set Count in" />
+
+    <Button
+        android:id="@+id/buttonNoCountIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClickClearCountIn"
+        android:text="Clear Count in" />
+
+    <Button
+        android:id="@+id/buttonRecord"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClickRecord"
+        android:text="Record" />
+
+    <Button
+        android:id="@+id/buttonStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClickStop"
+        android:text="Stop" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hello_world" />
+
+</LinearLayout>

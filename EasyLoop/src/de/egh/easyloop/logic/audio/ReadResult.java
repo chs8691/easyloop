@@ -3,7 +3,7 @@ package de.egh.easyloop.logic.audio;
 /** Provides result of a audio buffer read. */
 public interface ReadResult {
 
-	/** Returns the actual audio buffer */
+	/** Returns the actual audio buffer copy */
 	public short[] getBuffer();
 
 	/**

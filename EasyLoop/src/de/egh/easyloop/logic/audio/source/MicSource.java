@@ -19,6 +19,7 @@ public class MicSource implements AudioSource {
 	private AudioRecord audioRecord;
 	private short[] bufferShort;
 	private int bufferSizeInByte;
+	private LoopEventListener loopEventListener;
 	private boolean open;
 	private PeakStrategy peakStrategy;
 	private final ReadResultImplementation readResult;
@@ -33,7 +34,7 @@ public class MicSource implements AudioSource {
 
 			bufferSizeInByte = AudioRecord.getMinBufferSize(
 					Constants.AudioSettings.FREQUENCY,
-					Constants.AudioSettings.CHANNEL_CONFIG,
+					Constants.AudioSettings.CHANNEL_IN_CONFIG,
 					Constants.AudioSettings.AUDIO_ENCODING) //
 					* BUFFER_FACTOR;
 
@@ -51,6 +52,8 @@ public class MicSource implements AudioSource {
 		}
 
 		readResult = new ReadResultImplementation();
+
+		setLoopEventListener(null);
 	}
 
 	/**
@@ -72,6 +75,11 @@ public class MicSource implements AudioSource {
 	}
 
 	@Override
+	public boolean isAvailable() {
+		return true;
+	}
+
+	@Override
 	public boolean isOpen() {
 		return open;
 	}
@@ -82,15 +90,32 @@ public class MicSource implements AudioSource {
 	}
 
 	@Override
+	public void setLoopEventListener(final LoopEventListener loopEventListener) {
+		if (loopEventListener != null)
+			this.loopEventListener = loopEventListener;
+		else
+			// Null-Object
+			this.loopEventListener = new LoopEventListener() {
+
+				@Override
+				public void onNewLoopStart(final int duration) {
+				}
+			};
+	}
+
+	@Override
 	public void start() {
 		Log.v(TAG, "start()");
 
 		audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
 				Constants.AudioSettings.FREQUENCY,
-				Constants.AudioSettings.CHANNEL_CONFIG,
+				Constants.AudioSettings.CHANNEL_IN_CONFIG,
 				Constants.AudioSettings.AUDIO_ENCODING, bufferSizeInByte);
 		audioRecord.startRecording();
 		open = audioRecord.getState() == AudioRecord.STATE_INITIALIZED;
+
+		// Not really useful, but make it conform to the player source
+		loopEventListener.onNewLoopStart(AudioSource.NO_DURATION);
 	}
 
 	@Override

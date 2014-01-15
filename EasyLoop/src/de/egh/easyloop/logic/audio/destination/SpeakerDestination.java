@@ -13,8 +13,11 @@ public class SpeakerDestination implements AudioDestination {
 	private static final String TAG = "SpeakerDestination";
 	private final AudioTrack audioTrack;
 	private short[] buffer;
+
 	private int bufferSize;
 	private boolean mute;
+	// If muted: Play empty buffer
+	private short[] mutedBuffer;
 	private boolean open;
 	private final PeakStrategy peakStrategy;
 	private final int playBufferSizeInByte;
@@ -38,6 +41,10 @@ public class SpeakerDestination implements AudioDestination {
 		peakStrategy = new PeakStrategy(playBufferSizeInByte);
 
 		open = false;
+
+		// prevent null pointer exception
+		buffer = new short[0];
+
 	}
 
 	@Override
@@ -79,7 +86,9 @@ public class SpeakerDestination implements AudioDestination {
 
 	@Override
 	public void mute(final boolean mute) {
+
 		this.mute = mute;
+
 	}
 
 	@Override
@@ -102,6 +111,8 @@ public class SpeakerDestination implements AudioDestination {
 	/** Copies read result and updates volume value */
 	private void storeReadResult(final ReadResult readResult) {
 		buffer = readResult.getBuffer();
+		mutedBuffer = new short[buffer.length];
+
 		bufferSize = readResult.getSize();
 
 		// Implement linear volume control
@@ -115,7 +126,9 @@ public class SpeakerDestination implements AudioDestination {
 	public void write(final ReadResult readResult) {
 		storeReadResult(readResult);
 
-		if (!mute)
+		if (mute)
+			audioTrack.write(mutedBuffer, 0, bufferSize);
+		else
 			audioTrack.write(buffer, 0, bufferSize);
 	}
 

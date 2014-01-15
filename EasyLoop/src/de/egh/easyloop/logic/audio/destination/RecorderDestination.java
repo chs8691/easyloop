@@ -27,6 +27,7 @@ public class RecorderDestination implements AudioDestination {
 	private boolean mute;
 	private boolean open = false;
 	private PeakStrategy peakStrategy;
+	private long startTime;
 	private int volume;
 
 	/** The recorder can be created in the UI thread. */
@@ -34,6 +35,12 @@ public class RecorderDestination implements AudioDestination {
 		Log.v(TAG, "RecorderDestination()");
 		this.contextWrapper = contextWrapper;
 		volume = 100;
+
+		// prevent null pointer exception
+		buffer = new short[0];
+
+		startTime = 0;
+
 	}
 
 	@Override
@@ -45,6 +52,7 @@ public class RecorderDestination implements AudioDestination {
 			return;
 
 		open = false;
+		startTime = 0;
 
 		try {
 			dos.close();
@@ -72,6 +80,13 @@ public class RecorderDestination implements AudioDestination {
 			return 0;
 		else
 			return peakStrategy.getMax(buffer);
+	}
+
+	public int getActualTime() {
+		if (isOpen())
+			return (int) (System.currentTimeMillis() - startTime);
+		else
+			return 0;
 	}
 
 	@Override
@@ -115,6 +130,7 @@ public class RecorderDestination implements AudioDestination {
 			e.printStackTrace();
 		}
 		this.open = true;
+		startTime = System.currentTimeMillis();
 
 	}
 
