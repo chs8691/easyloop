@@ -1,10 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <EditTextPreference
-        android:defaultValue="0"
-        android:key="preferencesPlayNr"
-        android:title="File Nr to play" >
-    </EditTextPreference>
-
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/preferenceCountInEntries"
+        android:entryValues="@array/preferenceCountInValues"
+        android:key="preferencesCountInKey"
+        android:summary="@string/preferencesCountInTimeSummary"
+        android:title="@string/preferencesCountInTimeTitle" />
+    
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/preferenceBufferSizeEntries"
+        android:entryValues="@array/preferenceBufferSizeValues"
+        android:key="preferencesBufferSizeKey"
+        android:summary="@string/preferencesBufferSizeSummary"
+        android:title="@string/preferencesBufferSizeTitle" />
+    
+    <ListPreference
+        android:defaultValue="10000"
+        android:entries="@array/preferenceFadeInEntries"
+        android:entryValues="@array/preferenceFadeInValues"
+        android:key="preferencesFadeInKey"
+        android:summary="@string/preferencesFadeInSummary"
+        android:title="@string/preferencesFadeInTitle" />
+    
+    <ListPreference
+        android:defaultValue="10000"
+        android:entries="@array/preferenceFadeOutEntries"
+        android:entryValues="@array/preferenceFadeOutValues"
+        android:key="preferencesFadeOutKey"
+        android:summary="@string/preferencesFadeOutSummary"
+        android:title="@string/preferencesFadeOutTitle" />
+    
 </PreferenceScreen>

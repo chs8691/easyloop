@@ -27,6 +27,12 @@
 
                     <padding android:bottom="5dp" android:left="5dp" android:right="5dp" android:top="5dp" />
                 </shape></item>
+                            <item android:bottom="2dp" android:left="10dp" android:right="10dp" android:top="10dp">
+                <color android:color="@color/toggle_light_off" />
+            </item>
+            <item android:bottom="8dp" android:left="10dp" android:right="10dp" android:top="10dp">
+                <color android:color="@color/button_inactive" />
+            </item>
         </layer-list></item>
     <item android:state_pressed="true"><layer-list>
             <item><shape>
@@ -46,6 +52,12 @@
 
                     <padding android:bottom="5dp" android:left="2dp" android:right="2dp" android:top="2dp" />
                 </shape></item>
+                            <item android:bottom="2dp" android:left="10dp" android:right="10dp" android:top="10dp">
+                <color android:color="@color/toggle_light_off" />
+            </item>
+            <item android:bottom="8dp" android:left="10dp" android:right="10dp" android:top="10dp">
+                <color android:color="@color/button_active" />
+            </item>
             <item android:bottom="1px" android:left="3px" android:right="1px" android:top="3px"><shape>
                     <solid android:color="@android:color/holo_blue_bright" />
 
@@ -72,6 +84,10 @@
 
                     <padding android:bottom="5dp" android:left="2dp" android:right="2dp" android:top="2dp" />
                 </shape></item>
+            <item android:bottom="2dp" android:left="10dp" android:right="10dp" android:top="10dp"><color android:color="@color/toggle_light_off" />
+            </item>
+            <item android:bottom="8dp" android:left="10dp" android:right="10dp" android:top="10dp"><color android:color="@color/button_active" />
+            </item>
             <item android:bottom="1px" android:left="3px" android:right="1px" android:top="3px"><shape>
                     <solid android:color="@android:color/holo_blue_light" />
 
@@ -82,7 +98,7 @@
         </layer-list></item>
 
     <!-- Checked -->
-    <item easyloop:tapeButtonStateChecked="true"><layer-list>
+    <item android:state_checked="true"><layer-list>
             <item><shape>
                     <solid android:color="#00000000" />
                 </shape></item>
@@ -107,10 +123,12 @@
 
                     <padding android:bottom="5dp" android:left="5dp" android:right="5dp" android:top="5dp" />
                 </shape></item>
+            <item android:bottom="2dp" android:left="10dp" android:right="10dp" android:top="10dp"><color android:color="@color/toggle_light_on" />
+            </item>
+            <item android:bottom="8dp" android:left="10dp" android:right="10dp" android:top="10dp"><color android:color="@color/button_checked" />
+            </item>
         </layer-list></item>
-        
 
-    
     <!-- default -->
     <item><layer-list>
             <item><shape>
@@ -137,6 +155,10 @@
 
                     <padding android:bottom="5dp" android:left="5dp" android:right="5dp" android:top="5dp" />
                 </shape></item>
+            <item android:bottom="2dp" android:left="10dp" android:right="10dp" android:top="10dp"><color android:color="@color/toggle_light_off" />
+            </item>
+            <item android:bottom="8dp" android:left="10dp" android:right="10dp" android:top="10dp"><color android:color="@color/button_active" />
+            </item>
         </layer-list></item>
 
 </selector>

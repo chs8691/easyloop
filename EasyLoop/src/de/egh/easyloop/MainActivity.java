@@ -1,6 +1,9 @@
 package de.egh.easyloop;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -8,14 +11,21 @@ import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.ImageButton;
+import android.widget.ToggleButton;
+import de.egh.easyloop.application.SettingsBuffer;
 import de.egh.easyloop.helper.Util;
 import de.egh.easyloop.logic.AudioService;
 import de.egh.easyloop.logic.SessionService;
 import de.egh.easyloop.logic.SessionService.SessionEventListener;
+import de.egh.easyloop.ui.SettingsActivity;
 import de.egh.easyloop.ui.component.SliderSlot;
 import de.egh.easyloop.ui.component.SliderSlot.EventListener;
 import de.egh.easyloop.ui.components.tapebutton.TapeButtonView;
@@ -23,9 +33,39 @@ import de.egh.easyloop.ui.components.tapebutton.TapeButtonView.Status;
 
 public class MainActivity extends Activity {
 
-	private final static String TAG = "MainActivity";
-	private AudioManager audioManager;
+	public static class AboutFragment extends DialogFragment {
+		static AboutFragment newInstance() {
+			final AboutFragment f = new AboutFragment();
+			return f;
+		}
 
+		@Override
+		public Dialog onCreateDialog(final Bundle savedInstanceState) {
+			Log.v(TAG, "onCreateDialog()");
+			final Dialog aboutDialog = super.onCreateDialog(savedInstanceState);
+
+			aboutDialog.setContentView(R.layout.about);
+			aboutDialog.setTitle(getText(R.string.about_title));
+
+			final Button button = (Button) aboutDialog
+					.findViewById(R.id.about_button_close);
+
+			button.setOnClickListener(new View.OnClickListener() {
+
+				@Override
+				public void onClick(final View v) {
+					aboutDialog.cancel();
+				}
+			});
+
+			return aboutDialog;
+		}
+
+	}
+
+	private final static String TAG = "MainActivity";
+
+	private AudioManager audioManager;
 	AudioService audioService = new AudioService() {
 
 		@Override
@@ -39,22 +79,25 @@ public class MainActivity extends Activity {
 			audioManager.setMicrophoneMute(mute);
 		}
 	};
+
+	private ToggleButton countInButton;
+
 	public String filename;
 
 	private SliderSlot inSliderSlot;
-
 	private SliderSlot liveSliderSlot;
-
 	private TapeButtonView play1Button;
+
 	private TapeButtonView record1Button;
 	private SessionService.SessionEventListener sessionEventListener;
-
 	private SessionService sessionService;
 	private boolean sessionServiceBound = false;
 	/** Defines callbacks for service binding, passed to bindService() */
 
 	private ServiceConnection sessionServiceConnection;
-	private Button stop;
+	private ImageButton stop;
+	private ToggleButton tapeCountInToggle;
+
 	private SliderSlot tapeSliderSlot;
 
 	/**
@@ -64,7 +107,6 @@ public class MainActivity extends Activity {
 	 */
 	private void createServiceConnection() {
 		sessionServiceConnection = new ServiceConnection() {
-
 			@Override
 			public void onServiceConnected(final ComponentName className,
 					final IBinder service) {
@@ -75,32 +117,37 @@ public class MainActivity extends Activity {
 				sessionService = serviceBinder.getService();
 				sessionServiceBound = true;
 
-				// Simplest implementation of a AudioService. Only mic support.
-				sessionService.setAudioService(audioService);
+				// We want service to alive after unbind, if tapemachine active
+				startService(new Intent(MainActivity.this, SessionService.class));
 
-				// --- Record Button -----------------------//
-				record1Button.setEnabled(sessionService.canRecord());
-				record1Button
-						.setStatus(sessionService.isRecording() ? TapeButtonView.Status.RUNNING
-								: TapeButtonView.Status.STOPPED);
-				if (sessionService.isRecording())
-					record1Button.startCounterRecord(sessionService
-							.getRecorderActualTime());
+				// // Simplest implementation of a AudioService. Only mic
+				// support.
+				// sessionService.setAudioService(audioService);
 
-				// --- Play Button -------------------------//
-				play1Button.setEnabled(sessionService.canPlay());
-				play1Button
-						.setStatus(sessionService.isPlaying() ? TapeButtonView.Status.RUNNING
-								: TapeButtonView.Status.STOPPED);
-				if (sessionService.isPlaying())
-					play1Button.startCounterPlay(
-							sessionService.getPlayerDuration(),
-							sessionService.getPlayerActualTime());
+				sessionService.initialize(MainActivity.this);
 
 				sessionEventListener = new SessionEventListener() {
+
+					@Override
+					public void onCountInStart(final int countInTime) {
+						Log.v(TAG, "onCountInstart()");
+
+						record1Button.setEnabled(true);
+						record1Button.setStatus(Status.COUNT_IN);
+						record1Button.startCounterCountIn(countInTime, 0);
+
+						inSliderSlot.enableSwitchButton(false);
+
+					}
+
 					@Override
 					public void onInLevelChanged(final short level) {
 						inSliderSlot.setLevel(level);
+					}
+
+					@Override
+					public void onInSwitched(final boolean on) {
+						record1Button.setEnabled(sessionService.canRecord());
 					}
 
 					@Override
@@ -140,6 +187,10 @@ public class MainActivity extends Activity {
 						record1Button.startCounterRecord(0);
 
 						inSliderSlot.enableSwitchButton(false);
+
+						// Not nice but simple: We assume that the recording
+						// create a file that we can play.
+						play1Button.setEnabled(true);
 					}
 
 					@Override
@@ -158,12 +209,51 @@ public class MainActivity extends Activity {
 
 					@Override
 					public void onTapeLevelChanged(final short level) {
+						// if (level > 100)
+						// Log.v(TAG, "Level=" + level);
 						tapeSliderSlot.setLevel(level);
 					}
 
 				};
 
 				sessionService.setSessionEventListener(sessionEventListener);
+
+				// --- Record Button -----------------------//
+				record1Button.setEnabled(sessionService.canRecord());
+
+				if (sessionService.isCountingIn()) {
+					record1Button.setStatus(TapeButtonView.Status.COUNT_IN);
+					record1Button.startCounterCountIn(
+							sessionService.getCountInDuration(),
+							sessionService.getCountInActualTime());
+
+				} else if (sessionService.isRecording()) {
+					record1Button.setStatus(TapeButtonView.Status.RUNNING);
+					record1Button.startCounterRecord(sessionService
+							.getRecorderActualTime());
+
+				} else {
+					record1Button.setStatus(TapeButtonView.Status.STOPPED);
+				}
+
+				record1Button
+						.setStatus(sessionService.isRecording() ? TapeButtonView.Status.RUNNING
+								: TapeButtonView.Status.STOPPED);
+				if (sessionService.isRecording())
+					record1Button.startCounterRecord(sessionService
+							.getRecorderActualTime());
+
+				// --- Play Button -------------------------//
+				play1Button.setEnabled(sessionService.canPlay());
+				play1Button
+						.setStatus(sessionService.isPlaying() ? TapeButtonView.Status.RUNNING
+								: TapeButtonView.Status.STOPPED);
+				if (sessionService.isPlaying())
+					play1Button.startCounterPlay(
+							sessionService.getPlayerDuration(),
+							sessionService.getPlayerActualTime());
+
+				countInButton.setChecked(sessionService.isCountInEnabled());
 
 				// --- Mic In Slot -------------------------//
 				inSliderSlot.setSwitchButton(sessionService.isInOpen());
@@ -179,6 +269,9 @@ public class MainActivity extends Activity {
 					@Override
 					public void onSwitchButtonToggled(final boolean set) {
 						sessionService.switchIn(set);
+
+						// TODO Switching record ability should be part of the
+						// SessionService
 						record1Button.setEnabled(set);
 					}
 
@@ -234,8 +327,17 @@ public class MainActivity extends Activity {
 					}
 				});
 
-				// We want service to alive after unbind, if tapemachine active
-				startService(new Intent(MainActivity.this, SessionService.class));
+				tapeCountInToggle
+						.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+							@Override
+							public void onCheckedChanged(
+									final CompoundButton buttonView,
+									final boolean isChecked) {
+								sessionService.setCountIn(isChecked);
+							}
+						});
+
 			}
 
 			@Override
@@ -253,10 +355,19 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		// Initialize SettingsBuffer
+		SettingsBuffer.getInstance().refreshSharedPreferences(this);
+
+		// Set all default values once for this application
+		// This must be done in the 'Main' first activity
+		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
 		audioManager = (AudioManager) this
 				.getSystemService(Context.AUDIO_SERVICE);
 
-		stop = (Button) findViewById(R.id.buttonStop);
+		tapeCountInToggle = (ToggleButton) findViewById(R.id.tapeCountInToggle);
+
+		stop = (ImageButton) findViewById(R.id.buttonStop);
 		stop.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -266,6 +377,7 @@ public class MainActivity extends Activity {
 			}
 		});
 
+		countInButton = (ToggleButton) findViewById(R.id.tapeCountInToggle);
 		// --- Tape buttons ---//
 		play1Button = (TapeButtonView) findViewById(R.id.play1Button);
 
@@ -308,11 +420,10 @@ public class MainActivity extends Activity {
 		tapeSliderSlot.activateMuteButton(true);
 		tapeSliderSlot.activateSwitchButton(false);
 
-		// Live signal's slot has no volume control and can only be switched
-		// on/off.
 		inSliderSlot = (SliderSlot) findViewById(R.id.inSliderSlot);
 		inSliderSlot.activateMuteButton(false);
 		inSliderSlot.activateSwitchButton(true);
+		// We can't change the input level
 		inSliderSlot.setSeekBarEnable(false);
 
 		liveSliderSlot = (SliderSlot) findViewById(R.id.liveSliderSlot);
@@ -329,10 +440,24 @@ public class MainActivity extends Activity {
 	}
 
 	@Override
-	protected void onStart() {
-		Log.v(TAG, "onStart()");
+	public boolean onMenuItemSelected(final int featureId, final MenuItem item) {
 
-		super.onStart();
+		if (item.getItemId() == R.id.action_settings) {
+			startActivity(new Intent(this, SettingsActivity.class));
+			return true;
+
+		} else if (item.getItemId() == R.id.action_about) {
+			showAboutDialog();
+		}
+
+		return super.onMenuItemSelected(featureId, item);
+	}
+
+	@Override
+	protected void onResume() {
+		Log.v(TAG, "onResume()");
+
+		super.onResume();
 
 		// Views must be created at this point in time.
 		createServiceConnection();
@@ -346,6 +471,7 @@ public class MainActivity extends Activity {
 				sessionServiceConnection, Context.BIND_AUTO_CREATE);
 
 		Log.v(TAG, "bindService returned " + sessionServiceBound);
+
 	}
 
 	@Override
@@ -361,6 +487,13 @@ public class MainActivity extends Activity {
 
 			unbindService(sessionServiceConnection);
 		}
+	}
+
+	private void showAboutDialog() {
+		final FragmentManager fm = getFragmentManager();
+		final DialogFragment aboutFragment = AboutFragment.newInstance();
+		Log.v(TAG, "showAboutDialog()");
+		aboutFragment.show(fm, "aboutDialog");
 	}
 
 	/** Update the UI components after a service's change. */

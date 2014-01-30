@@ -13,16 +13,15 @@ import android.view.View;
 @Deprecated
 class LevelBarView extends View {
 
+	private final static String TAG = "LevelBarView";
+	private short actLevel = 0;
 	private Bitmap bitmap;
 	private Canvas canvas;
 	private Paint paint;
-	private short actLevel = 0;
-	private final static String TAG = "LevelBarView";
 
 	public LevelBarView(final Context context, final AttributeSet attrs) {
 		super(context, attrs);
 		Log.v(TAG, "LevelBarView()");
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

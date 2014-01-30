@@ -5,11 +5,12 @@ import java.util.Map;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import de.egh.easyloop.R;
-import de.egh.easyloop.helper.Constants;
+import de.egh.easyloop.application.Constants;
+import de.egh.easyloop.application.SettingsBuffer;
 
 public class SettingsActivity extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
@@ -33,8 +34,11 @@ public class SettingsActivity extends PreferenceActivity implements
 	@Override
 	public void onSharedPreferenceChanged(final SharedPreferences sharedPref,
 			final String key) {
-		validate(sharedPref, key);
+
 		updateSummary(sharedPref, key);
+
+		// Copy to global buffer
+		SettingsBuffer.getInstance().refreshSharedPreferences(this);
 	}
 
 	/** Updated summary of some particular preferences with its value */
@@ -42,34 +46,29 @@ public class SettingsActivity extends PreferenceActivity implements
 			final String key) {
 
 		// Case 2: Transform value to name of a ListPreference
-		if (key.equals(Constants.SharedPreferences.PreferencesPlayNr.KEY) //
+		if (key.equals(Constants.SharedPreferences.COUNT_IN_TIME) //
 		) {
-			final EditTextPreference pref = (EditTextPreference) findPreference(key);
-			pref.setSummary(pref.getText());
+			final ListPreference pref = (ListPreference) findPreference(key);
+			pref.setSummary(getText(R.string.preferencesCountInTimeSummary)
+					+ ": " + pref.getEntry() + " "
+					+ getText(R.string.preferencesCountInTimeSummeryUnit));
+		} else if (key.equals(Constants.SharedPreferences.BUFFER_SIZE) //
+		) {
+			final ListPreference pref = (ListPreference) findPreference(key);
+			pref.setSummary(getString(R.string.preferencesBufferSizeSummary)
+					+ " x " + pref.getEntry());
+		} else if (key.equals(Constants.SharedPreferences.FADE_IN) //
+		) {
+			final ListPreference pref = (ListPreference) findPreference(key);
+			pref.setSummary(getString(R.string.preferencesFadeInSummary) + " "
+					+ pref.getEntry());
+		} else if (key.equals(Constants.SharedPreferences.FADE_OUT) //
+		) {
+			final ListPreference pref = (ListPreference) findPreference(key);
+			pref.setSummary(getString(R.string.preferencesFadeOutSummary) + " "
+					+ pref.getEntry());
 		}
-	}
 
-	/** User input validation */
-	private void validate(final SharedPreferences sharedPref, final String key) {
-		// if (key.equals(Constants.SharedPref.Timeout.KEY) //
-		// ) {
-		// final EditTextPreference timeoutPref = (EditTextPreference)
-		// findPreference(key);
-		// int value = Integer
-		// .parseInt(getString(R.string.preferencesTimeoutDefault));
-		//
-		// final String valueString = timeoutPref.getText();
-		// try {
-		// value = Integer.parseInt(valueString);
-		// if (value < TIMEOUT_MIN_SEC)
-		// value = TIMEOUT_MIN_SEC;
-		// else if (value > TIMEOUT_MAX_SEC)
-		// value = TIMEOUT_MAX_SEC;
-		// } catch (final NumberFormatException e) {
-		// // User input is not a number: Take default
-		// }
-		//
-		// timeoutPref.setText(String.valueOf(value));
 	}
 
 }

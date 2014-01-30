@@ -4,18 +4,18 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.util.Log;
-import de.egh.easyloop.helper.Constants;
+import de.egh.easyloop.application.Constants;
+import de.egh.easyloop.helper.Util;
 import de.egh.easyloop.logic.PeakStrategy;
 import de.egh.easyloop.logic.audio.ReadResult;
 
 public class SpeakerDestination implements AudioDestination {
-	private static final int PLAY_BUFFER_FACTOR = 2;
 	private static final String TAG = "SpeakerDestination";
 	private final AudioTrack audioTrack;
-	private short[] buffer;
+	private final short[] buffer;
 
 	private int bufferSize;
-	private boolean mute;
+	private boolean muted;
 	// If muted: Play empty buffer
 	private short[] mutedBuffer;
 	private boolean open;
@@ -23,14 +23,22 @@ public class SpeakerDestination implements AudioDestination {
 	private final int playBufferSizeInByte;
 	private int volume;
 
+	/**
+	 * 
+	 * @param context
+	 *            Context with activity context
+	 * @param name
+	 *            String with name of this destination. Must be unique.
+	 */
 	public SpeakerDestination() {
 		Log.v(TAG, "SpeakerDestination()");
 
-		playBufferSizeInByte = AudioTrack.getMinBufferSize(
-				Constants.AudioSettings.FREQUENCY,
-				AudioFormat.CHANNEL_OUT_MONO,
-				Constants.AudioSettings.AUDIO_ENCODING)// ;
-				* PLAY_BUFFER_FACTOR;
+		// playBufferSizeInByte = AudioTrack.getMinBufferSize(
+		// Constants.AudioSettings.FREQUENCY,
+		// AudioFormat.CHANNEL_OUT_MONO,
+		// Constants.AudioSettings.AUDIO_ENCODING)// ;
+		// * Constants.AudioSettings.BUFFER_SIZE_FACTOR;
+		playBufferSizeInByte = Util.getBufferSizeInByte();
 
 		audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
 				Constants.AudioSettings.FREQUENCY,
@@ -43,7 +51,7 @@ public class SpeakerDestination implements AudioDestination {
 		open = false;
 
 		// prevent null pointer exception
-		buffer = new short[0];
+		buffer = Util.createBuffer();
 
 	}
 
@@ -66,7 +74,7 @@ public class SpeakerDestination implements AudioDestination {
 
 	@Override
 	public short getActualMaxLevel() {
-		return peakStrategy.getMax(buffer);
+		return peakStrategy.getMax(buffer, bufferSize);
 	}
 
 	@Override
@@ -76,7 +84,7 @@ public class SpeakerDestination implements AudioDestination {
 
 	@Override
 	public boolean isMuted() {
-		return mute;
+		return muted;
 	}
 
 	@Override
@@ -87,7 +95,7 @@ public class SpeakerDestination implements AudioDestination {
 	@Override
 	public void mute(final boolean mute) {
 
-		this.mute = mute;
+		this.muted = mute;
 
 	}
 
@@ -105,12 +113,16 @@ public class SpeakerDestination implements AudioDestination {
 
 	@Override
 	public void setVolume(final int volume) {
+		Log.v(TAG, "setVolume() to " + volume);
+
 		this.volume = volume;
+
 	}
 
-	/** Copies read result and updates volume value */
+	/** Copies read result with volume controlled value. */
 	private void storeReadResult(final ReadResult readResult) {
-		buffer = readResult.getBuffer();
+
+		readResult.copy(buffer);
 		mutedBuffer = new short[buffer.length];
 
 		bufferSize = readResult.getSize();
@@ -126,7 +138,7 @@ public class SpeakerDestination implements AudioDestination {
 	public void write(final ReadResult readResult) {
 		storeReadResult(readResult);
 
-		if (mute)
+		if (muted)
 			audioTrack.write(mutedBuffer, 0, bufferSize);
 		else
 			audioTrack.write(buffer, 0, bufferSize);

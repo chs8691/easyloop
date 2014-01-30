@@ -16,5 +16,25 @@
     <string name="tapeSliderSlotTitle">Tape</string>
     <string name="buttonOn">On</string>
     <string name="buttonOff">Off</string>
+    <string name="countInToggleOn">Count in</string>
+    <string name="countInToggleOff">Direct</string>
+    <string name="notificationTitle">Running</string>
+    <string name="notificationText">The tapemachine in running.</string>
+    <string name="preferencesCountInTimeTitle">Count in time</string>
+    <string name="preferencesCountInTimeSummeryUnit">second(s)</string>
+    <string name="preferencesCountInTimeSummary">Duration is </string>
+    <string name="preferencesBufferSizeTitle">Audio buffer size</string>
+    <string name="preferencesBufferSizeSummary">Size of audio buffer factor is</string>
+    <string name="preferencesFadeInTitle">Fade in</string>
+    <string name="preferencesFadeInSummary">Sequence fade in tempo</string>
+    <string name="preferencesFadeOutTitle">Fade out</string>
+    <string name="preferencesFadeOutSummary">Sequence fade out tempo</string>
     
+    <!-- About dialog -->
+    <string name="about_title">About Easy Loop</string>
+    <string name="about_text1">Have a suggestion to improve the app or found an error? Please contact</string>
+    <string name="about_text2">earl.grey.its.hand@gmail.com</string>
+    <string name="about_text3">Thank you!</string>
+    <string name="about_close_button">Close</string>
+
 </resources>

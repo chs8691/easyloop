@@ -24,8 +24,10 @@ public class VuMeter extends View implements
 
 	private class Color {
 		private class Background {
-			private static final int MUTED = 0xff7D7D7D;
-			private static final int UNMUTED = 0xff000000;
+			// private static final int MUTED = 0xff7D7D7D;
+			// private static final int UNMUTED = 0xff000000;
+			private static final int MUTED = 0x66404547;
+			private static final int UNMUTED = 0xff093647;
 		}
 
 		private class Needle {

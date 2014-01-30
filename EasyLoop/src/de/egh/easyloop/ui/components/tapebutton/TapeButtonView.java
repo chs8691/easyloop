@@ -237,6 +237,23 @@ public class TapeButtonView extends RelativeLayout {
 	}
 
 	/**
+	 * Resets and starts the counter for button 'Record'.
+	 * 
+	 * @throws RuntimeException
+	 *             if status != RUNNING or type != PLAY or duration < 0
+	 */
+	public void startCounterCountIn(final int countInTime, final int actualTime) {
+		if (!status.equals(Status.COUNT_IN))
+			throw new RuntimeException("Button is not in status running: "
+					+ status.name());
+		if (!type.equals(ButtonType.RECORD))
+			throw new RuntimeException("Type is not Record: " + type.name());
+
+		circleCounterView.startAnimation(countInTime, Type.COUNT_BACKWARDS,
+				actualTime);
+	}
+
+	/**
 	 * Resets and starts the counter for button 'Play'. A valid duration in
 	 * milliseconds must >= 0.
 	 * 
@@ -253,7 +270,7 @@ public class TapeButtonView extends RelativeLayout {
 			throw new RuntimeException("Button is not in status running: "
 					+ status.name());
 		if (!type.equals(ButtonType.PLAY))
-			throw new RuntimeException("Type is not Play: " + status.name());
+			throw new RuntimeException("Type is not Play: " + type.name());
 		if (duration < 0)
 			throw new RuntimeException("Duration not positive: " + duration);
 
@@ -271,7 +288,7 @@ public class TapeButtonView extends RelativeLayout {
 			throw new RuntimeException("Button is not in status running: "
 					+ status.name());
 		if (!type.equals(ButtonType.RECORD))
-			throw new RuntimeException("Type is not Record: " + status.name());
+			throw new RuntimeException("Type is not Record: " + type.name());
 
 		circleCounterView.startAnimation(0, Type.SECONDS, actualTime);
 	}

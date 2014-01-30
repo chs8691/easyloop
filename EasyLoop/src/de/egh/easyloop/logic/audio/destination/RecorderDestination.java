@@ -10,7 +10,8 @@ import java.io.IOException;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.util.Log;
-import de.egh.easyloop.helper.Constants;
+import de.egh.easyloop.application.Constants;
+import de.egh.easyloop.helper.Util;
 import de.egh.easyloop.logic.PeakStrategy;
 import de.egh.easyloop.logic.audio.ReadResult;
 
@@ -19,7 +20,7 @@ public class RecorderDestination implements AudioDestination {
 
 	private static final String TAG = "RecordDestination";
 	private BufferedOutputStream bos;
-	private short[] buffer;
+	private final short[] buffer;
 	private int bufferSize;
 	private final ContextWrapper contextWrapper;
 	private DataOutputStream dos;
@@ -37,7 +38,7 @@ public class RecorderDestination implements AudioDestination {
 		volume = 100;
 
 		// prevent null pointer exception
-		buffer = new short[0];
+		buffer = Util.createBuffer();
 
 		startTime = 0;
 
@@ -47,7 +48,7 @@ public class RecorderDestination implements AudioDestination {
 	public void close() {
 		Log.v(TAG, "close()");
 
-		// Nothing o do, already closed.
+		// Nothing to do, already closed.
 		if (!open)
 			return;
 
@@ -55,6 +56,7 @@ public class RecorderDestination implements AudioDestination {
 		startTime = 0;
 
 		try {
+			// Close file
 			dos.close();
 			bos.close();
 			fos.close();
@@ -67,6 +69,51 @@ public class RecorderDestination implements AudioDestination {
 
 		Log.v(TAG, "Wrote to file " + file.getPath() + " " + file.length());
 
+		// All this random access stuff is much to slow
+		// // Fade in and out
+		// try {
+		// final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+		//
+		// if (raf.length() > (Constants.AudioSettings.FADE_SIZE_SHORT * 2)) {
+		// final float factor = 1.0f / Constants.AudioSettings.FADE_SIZE_SHORT;
+		// short value;
+		//
+		// // Fade in
+		// for (int i = 0; i <= Constants.AudioSettings.FADE_SIZE_SHORT; i++) {
+		// // Point to the next short value
+		// raf.seek(2 * i);
+		// value = (short) (factor * i * raf.readShort());
+		// raf.writeShort(value);
+		// }
+		//
+		// // Fade out
+		// // Set pointer to start position (in bytes)
+		// long pos = raf.length()
+		// - (Constants.AudioSettings.FADE_SIZE_SHORT * 2);
+		// for (int i = Constants.AudioSettings.FADE_SIZE_SHORT; i >= 0; i--) {
+		// raf.seek(pos);
+		// value = (short) (factor * i * raf.readShort());
+		// raf.writeShort(value);
+		// // Set the pointer value to the next short
+		// pos += 2;
+		// }
+		//
+		// }
+		// // Very, very small files will be completely nulled
+		// else {
+		// final byte[] buffer = new byte[(int) raf.length()];
+		// raf.seek(0);
+		// raf.write(buffer);
+		// }
+		// raf.close();
+		//
+		// } catch (final FileNotFoundException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// } catch (final IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 	}
 
 	/**
@@ -79,7 +126,7 @@ public class RecorderDestination implements AudioDestination {
 		if (peakStrategy == null)
 			return 0;
 		else
-			return peakStrategy.getMax(buffer);
+			return peakStrategy.getMax(buffer, bufferSize);
 	}
 
 	public int getActualTime() {
@@ -141,7 +188,8 @@ public class RecorderDestination implements AudioDestination {
 
 	/** Copies read result and updates volume value */
 	private void storeReadResult(final ReadResult readResult) {
-		buffer = readResult.getBuffer();
+		// buffer = readResult.getBuffer();
+		readResult.copy(buffer);
 		bufferSize = readResult.getSize();
 
 		// Implement linear volume control
@@ -156,7 +204,9 @@ public class RecorderDestination implements AudioDestination {
 		// The Strategy depends of the source buffer size, so we have to set it
 		// once here.
 		if (peakStrategy == null)
-			peakStrategy = new PeakStrategy(readResult.getBufferSizeInByte());
+			// peakStrategy = new
+			// PeakStrategy(readResult.getBufferSizeInByte());
+			peakStrategy = new PeakStrategy(Util.getBufferSizeInByte());
 
 		storeReadResult(readResult);
 

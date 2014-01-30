@@ -23,6 +23,21 @@ import de.egh.easyloop.ui.components.tapebutton.TapeButtonView.Status;
 
 public class CircleCounterView extends View implements AnimatorUpdateListener {
 
+	/** Storage for animation properties */
+	private class AnimationSetting {
+		int actualTime;
+		int totalDuration;
+		Type type;
+
+		public AnimationSetting(final int totalDuration, final Type type,
+				final int actualTime) {
+			this.totalDuration = totalDuration;
+			this.type = type;
+			this.actualTime = actualTime;
+
+		}
+	}
+
 	/** Listener for events of CircleCounterView. */
 	public interface EventListener {
 
@@ -131,13 +146,14 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 		public void setY(final float value) {
 			y = value;
 		}
-	}
+	};
 
 	/** Temporary transfer object. */
 	private class SplitResult {
 		public int duration;
 		public int pause;
-	};
+		public int remainingTime;
+	}
 
 	/** For playing, recording and count in there are three different styles. */
 	public enum Type {
@@ -152,10 +168,13 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 
 	}
 
+	// private static final int PANE2 = 0x00 << 24 |
+	// R.color.secondary_dark_gray;
 	private static final int ALPHA_ACTIVE = 0xFF;
 	private static final int ALPHA_INACTIVE = 0x44;
 	private static final int NEEDLE = 0xFFFFFF;
-	private static final int PANE = 0x1111111;
+	private static final int PANE = 0x00093647;
+
 	private static final int RECORD_DURATION = 4000;
 	// private static final int RECORD_QUATER_DURATION = 1000;
 
@@ -166,6 +185,9 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 	private AnimatorSet actualAnimatorSet;
 	// private int animationTotalDuration;
 	// private Type animationType;
+
+	/** If set, animation will be started when inflating has finished. */
+	private AnimationSetting animationSettingMemory;
 
 	/** Count in time in ms. Enables count in, if duration > 0. */
 	private int countInTime;
@@ -189,29 +211,6 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 	private final RectF ringRect;
 
 	private Status status;
-
-	public CircleCounterView(final Context context, final AttributeSet attrs) {
-		super(context, attrs);
-		ringPaint = new Paint();
-		ringRect = new RectF();
-		panePaint = new Paint();
-		paneRect = new RectF();
-
-		// As default, the status is inactive
-		status = Status.STOPPED;
-		enabled = true;
-
-	}
-
-	private void animationBecomeStop() {
-		Log.v(TAG, "animationBecomeStop()");
-
-		if (actualAnimatorSet != null) {
-			actualAnimatorSet.removeAllListeners();
-			actualAnimatorSet.end();
-		}
-
-	}
 
 	// private void buildAnimation(final int totalDuration, final Type type,
 	// final int actualTime) {
@@ -365,6 +364,32 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 	//
 	// }
 
+	public CircleCounterView(final Context context, final AttributeSet attrs) {
+		super(context, attrs);
+		ringPaint = new Paint();
+		ringRect = new RectF();
+		panePaint = new Paint();
+		paneRect = new RectF();
+
+		// As default, the status is inactive
+		status = Status.STOPPED;
+		enabled = true;
+
+		// Initialize memory
+		animationSettingMemory = null;
+
+	}
+
+	private void animationBecomeStop() {
+		Log.v(TAG, "animationBecomeStop()");
+
+		if (actualAnimatorSet != null) {
+			actualAnimatorSet.removeAllListeners();
+			actualAnimatorSet.end();
+		}
+
+	}
+
 	/**
 	 * 
 	 * @param totalDuration
@@ -377,12 +402,11 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 			final int actualTime) {
 
 		// Needle should pause at 12 o'clock or every second
-		SplitResult split;
+		final SplitResult split = splitDuration(totalDuration, actualTime);
 		nextAnimatorSet = new AnimatorSet();
 
 		// Playing
 		if (type.equals(Type.ONE_ROUND)) {
-			split = splitDuration(totalDuration);
 
 			final ObjectAnimator oaPause = ObjectAnimator.ofFloat(needle,
 					"angle", 0, 0);
@@ -395,15 +419,13 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 							"angle",
 							calcualateAngleActual(split.duration, actualTime,
 									360), 360);
-			oaAction1.setDuration(split.duration);
+			oaAction1.setDuration(split.remainingTime);
 			oaAction1.addUpdateListener(this);
 			nextAnimatorSet.play(oaAction1).before(oaPause);
-			// newAnimatorListener = createAnimationListener(ListenerType.NEXT);
 		}
 
 		// Count in
 		else if (type.equals(Type.COUNT_BACKWARDS)) {
-			split = splitDuration(totalDuration);
 
 			final ObjectAnimator oaPause = ObjectAnimator.ofFloat(needle,
 					"angle", 0, 0);
@@ -428,7 +450,7 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 
 			oaAction1 = ObjectAnimator.ofFloat(needle, "angle",
 					calcualateAngleActual(totalDuration, recTime, 360), 360);
-			oaAction1.setDuration(totalDuration - recTime);
+			oaAction1.setDuration(split.remainingTime);
 			oaAction1.addUpdateListener(this);
 
 			oaAction2 = ObjectAnimator.ofFloat(needle, "angle", 0, 360);
@@ -452,7 +474,26 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 		}
 		// No animation running
 		else {
+			if (nextAnimatorSet == null)
+				Log.v(TAG, "nextAnimator is null !!");
+			// else
+			// for (final Animator a : nextAnimatorSet.getChildAnimations())
+			// if (a == null)
+			// Log.v(TAG, "nextAnimatorSet: a is null");
+			// else
+			// Log.v(TAG, "nextAnimatorSet: " + a.toString());
+
 			actualAnimatorSet = nextAnimatorSet.clone();
+
+			if (actualAnimatorSet == null)
+				Log.v(TAG, "actualAnimator is null !!");
+			// else
+			// for (final Animator a : actualAnimatorSet.getChildAnimations())
+			// if (a == null)
+			// Log.v(TAG, "actualAnimatorSet: a is null");
+			// else
+			// Log.v(TAG, "actualAnimatorSet: " + a.toString());
+
 			actualAnimatorSet.start();
 		}
 
@@ -460,9 +501,6 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 
 	private int calcualateAngleActual(final int tTotal, final int tActal,
 			final int aTotal) {
-
-		// Log.v(TAG, "actualPositionToAngle() " + tTotal + " " + tActal + " "
-		// + aTotal + " Result=" + (aTotal * tActal / tTotal));
 
 		return aTotal * tActal / tTotal;
 	}
@@ -612,6 +650,8 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 			final int top, final int right, final int bottom) {
 		super.onLayout(changed, left, top, right, bottom);
 
+		Log.v(TAG, "onLayout()");
+
 		rectWidth = Math.min(getWidth(), getHeight());
 
 		ringPaint.reset();
@@ -633,6 +673,17 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 		// We are before first onDraw, so onDraw can use the needle.
 		if (needle == null)
 			needle = createNeedle();
+
+		// Start waiting animation
+		if (animationSettingMemory != null) {
+			Log.v(TAG, "Starting animation from memory: "
+					+ animationSettingMemory.totalDuration + " "
+					+ animationSettingMemory.type + " "
+					+ animationSettingMemory.actualTime);
+			startAnimation(animationSettingMemory.totalDuration,
+					animationSettingMemory.type,
+					animationSettingMemory.actualTime);
+		}
 	}
 
 	private float radiusToPoint(final float radius) {
@@ -699,7 +750,7 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 	 *            integer with milliseconds. Will be modified. Must be >= 0.
 	 * @return SplitResult new duration and pause in milliseconds
 	 */
-	private SplitResult splitDuration(final int duration) {
+	private SplitResult splitDuration(final int duration, final int actualTime) {
 		final int orig = duration;
 		final SplitResult result = new SplitResult();
 
@@ -710,6 +761,11 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 		else
 			result.duration = duration - 100;
 
+		if (actualTime < result.duration)
+			result.remainingTime = result.duration - actualTime;
+		else
+			result.remainingTime = 0;
+
 		result.pause = orig - result.duration;
 		return result;
 	}
@@ -718,7 +774,8 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 	 * Resets and starts the counter. Button must be active otherwise nothing
 	 * happens. A valid duration in milliseconds for type == COUNT_BACKWARDS is
 	 * [0..4000], for type == ONE_ROUND >=0 and for type == SECONDS, duration
-	 * will be ignored.
+	 * will be ignored. If the view is not inflated at calling time, only the
+	 * setting will be stored an started later on (but only the last one).
 	 * 
 	 * @param totalDuration
 	 *            int with milliseconds, but must be 0 for type == seconds
@@ -731,6 +788,18 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 		Log.v(TAG, "startAnimation( ) " + totalDuration + " " + type.name()
 				+ " " + actualTime);
 
+		// If view not inflated, put the start info to memory
+		if (needle == null) {
+			Log.v(TAG, "Only write animation settings to memory.");
+			animationSettingMemory = new AnimationSetting(totalDuration, type,
+					actualTime);
+			return;
+		} else if (animationSettingMemory != null) {
+			Log.v(TAG, "Dismiss animationSettingMemory");
+			// Dismiss obsolet animation memory.
+			animationSettingMemory = null;
+		}
+
 		if (type.equals(Type.SECONDS)) {
 			if (totalDuration != 0)
 				throw new RuntimeException("TotalDuration<>0: " + totalDuration);
@@ -741,19 +810,14 @@ public class CircleCounterView extends View implements AnimatorUpdateListener {
 				throw new RuntimeException("ActualTime > TotalDuration: "
 						+ actualTime + " " + totalDuration);
 		}
+
 		if (actualTime < 0)
 			throw new RuntimeException("ActualTime<0: " + actualTime);
-
-		// this.animationTotalDuration = totalDuration;
-		// this.animationType = type;
-
-		// Cancel previous animation
-		// if (nextAnimatorSet != null && nextAnimatorSet.isRunning())
-		// nextAnimatorSet.cancel();
 
 		if (type.equals(Type.SECONDS))
 			buildAnimation(RECORD_DURATION, type, actualTime);
 		else
 			buildAnimation(totalDuration, type, actualTime);
+
 	}
 }

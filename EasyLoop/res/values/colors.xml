@@ -2,8 +2,14 @@
 <resources>
 
     <color name="button_inactive">#88d7dee2</color>
+    <color name="toggle_light_on">#FF03B1FC</color>
+    <color name="toggle_light_off">#2203B1FC</color>
     <color name="button_active">#FFd7dee2</color>
     <color name="button_checked">#FFCBD2D6</color>
+    <color name="vu_background">#00404547</color>
+    <color name="a">#000000</color>
+    
+    
     <color name="secondary_white">#FFFFFF</color>
     <color name="secondary_white_gray">#d7dee2</color>
     <color name="secondary_silver">#7f868a</color>
@@ -11,7 +17,7 @@
     <color name="secondary_light_gray">#c8c8cd</color>
     <color name="secondary_gray">#878c96</color>
     <color name="secondary_middle_gray">#999999</color>
-    <color name="secondary_dark_gray">#646973</color>
+    <color name="secondary_dark_gray">#404547</color>
     <color name="secondary_black">#000000</color>
 
 </resources>

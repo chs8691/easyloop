@@ -24,14 +24,31 @@
         easyloop:sliderSlot_seekBarEnabled="true"
         easyloop:sliderSlot_title="@string/liveSliderSlotTitle" />
 
-    <de.egh.easyloop.ui.component.SliderSlot
-        android:id="@+id/tapeSliderSlot"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="10"
-        easyloop:sliderSlot_seekBarEnabled="true"
-        easyloop:sliderSlot_title="@string/tapeSliderSlotTitle" />
+        android:orientation="horizontal" >
 
+        <de.egh.easyloop.ui.component.SliderSlot
+            android:id="@+id/tapeSliderSlot"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            easyloop:sliderSlot_seekBarEnabled="true"
+            easyloop:sliderSlot_title="@string/tapeSliderSlotTitle" />
+
+        <ToggleButton
+            android:id="@+id/tapeCountInToggle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="50"
+            android:background="@drawable/toggle_button"
+            android:textOff="@string/countInToggleOff"
+            android:textOn="@string/countInToggleOn" 
+            android:hapticFeedbackEnabled="true"/>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -56,12 +73,15 @@
             easyloop:tapeButtonType="record" />
     </LinearLayout>
 
-    <Button
+    <ImageButton
         android:id="@+id/buttonStop"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="10"
-        android:text="@string/buttonStop" />
-    
+        android:background="@drawable/tape_button"
+        android:text="@string/buttonStop" 
+        android:hapticFeedbackEnabled="true"
+        android:src="@drawable/stop_button"
+        />
 
 </LinearLayout>

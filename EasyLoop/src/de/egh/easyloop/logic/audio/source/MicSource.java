@@ -3,7 +3,8 @@ package de.egh.easyloop.logic.audio.source;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
-import de.egh.easyloop.helper.Constants;
+import de.egh.easyloop.application.Constants;
+import de.egh.easyloop.helper.Util;
 import de.egh.easyloop.logic.PeakStrategy;
 import de.egh.easyloop.logic.audio.ReadResult;
 
@@ -13,7 +14,6 @@ import de.egh.easyloop.logic.audio.ReadResult;
  */
 public class MicSource implements AudioSource {
 
-	private static final int BUFFER_FACTOR = 1;
 	private static final String TAG = "MicSource";
 
 	private AudioRecord audioRecord;
@@ -32,16 +32,18 @@ public class MicSource implements AudioSource {
 
 		try {
 
-			bufferSizeInByte = AudioRecord.getMinBufferSize(
-					Constants.AudioSettings.FREQUENCY,
-					Constants.AudioSettings.CHANNEL_IN_CONFIG,
-					Constants.AudioSettings.AUDIO_ENCODING) //
-					* BUFFER_FACTOR;
+			// bufferSizeInByte = AudioRecord.getMinBufferSize(
+			// Constants.AudioSettings.FREQUENCY,
+			// Constants.AudioSettings.CHANNEL_IN_CONFIG,
+			// Constants.AudioSettings.AUDIO_ENCODING) //
+			// * Constants.AudioSettings.BUFFER_SIZE_FACTOR;
+			bufferSizeInByte = Util.getBufferSizeInByte();
 
 			Log.v(TAG, "Set recordBufferSizeInBye=" + bufferSizeInByte);
 
 			// A short has 2 bytes
-			bufferShort = new short[bufferSizeInByte / 2];
+			// bufferShort = new short[bufferSizeInByte / 2];
+			bufferShort = Util.createBuffer();
 
 			peakStrategy = new PeakStrategy(bufferSizeInByte);
 
@@ -62,8 +64,9 @@ public class MicSource implements AudioSource {
 	 */
 	@Override
 	public short getActualMaxLevel() {
-		if (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING)
-			return peakStrategy.getMax(bufferShort);
+		if (audioRecord != null
+				&& audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING)
+			return peakStrategy.getMax(bufferShort, readSize);
 		else
 			return 0;
 	}

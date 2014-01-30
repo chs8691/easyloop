@@ -19,8 +19,10 @@ public class ButtonIconView extends View {
 	private static final int ALPHA_ACTIVE = 0xFF;
 	private static final int ALPHA_INACTIVE = 0x44;
 	private static final int COUNT_IN_COLOR = 0xFFB938;
-	private static final int PLAY_COLOR = 0x1FCF08;
-	private static final int RECORD_COLOR = 0xD91414;
+	private static final int PLAY_COLOR = 0x1CAD09;
+	private static final int PLAY_COLOR_STOP = 0x838F82;
+	private static final int RECORD_COLOR = 0xAD0C0C;
+	private static final int RECORD_COLOR_STOP = 0x8A7C7C;
 
 	private boolean enabled;
 	private final Paint paint;
@@ -61,9 +63,14 @@ public class ButtonIconView extends View {
 
 			// Base color for play button
 			if (type.equals(ButtonType.PLAY))
-				color = color | PLAY_COLOR;
+				if (status.equals(Status.STOPPED))
+					color = color | PLAY_COLOR_STOP;
+				else
+					color = color | PLAY_COLOR;
 
 			// Record button has to states
+			else if (status.equals(Status.STOPPED))
+				color = color | RECORD_COLOR_STOP;
 			else
 				color = color | RECORD_COLOR;
 		}

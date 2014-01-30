@@ -33,7 +33,6 @@ public class PeakStrategy {
 	 *            value.
 	 */
 	public PeakStrategy(final int bufferSizeInByte) {
-		// TODO hier geht's weiter.
 		peakHistorySize = calculatePeakHistorySize(bufferSizeInByte);
 		Log.v(TAG, "peakHistorySize=" + peakHistorySize);
 	}
@@ -59,10 +58,23 @@ public class PeakStrategy {
 	 * Calculates the maximum value.
 	 * 
 	 * @param level
-	 *            short[] may not be null.
+	 *            short[] may not be null. All entries level.size >= size will
+	 *            be ignored
+	 * @param size
+	 *            array size to use
 	 * @return short with new calculated maximum.
 	 */
-	public short getMax(final short[] level) {
+	public short getMax(final short[] level, final int size) {
+
+		// // TODO Remove this debugging stuff
+		// short debugMx = 0;
+		// for (final short val : level) {
+		// if (val > debugMx)
+		// debugMx = val;
+		// }
+		// if (debugMx > 0)
+		// Log.v(TAG, "debugMx=" + debugMx);
+
 		// remove oldest max value
 		// buffer size * history size is constant
 		for (int i = peakHistorySize - 1; i >= 1; i--) {
@@ -72,7 +84,7 @@ public class PeakStrategy {
 		// This is our PeakStrategy:
 		// Max of the last 10 buffers
 		short actMax = 0;
-		for (int i = 0; i < level.length; i++)
+		for (int i = 0; i < size; i++)
 			if (level[i] > actMax)
 				actMax = level[i];
 
