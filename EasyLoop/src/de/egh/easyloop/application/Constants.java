@@ -39,8 +39,6 @@ public abstract class Constants {
 	public class SharedPreferences {
 		public static final String BUFFER_SIZE = "preferencesBufferSizeKey";
 		public static final String COUNT_IN_TIME = "preferencesCountInKey";
-		public static final String FADE_IN = "preferencesFadeInKey";
-		public static final String FADE_OUT = "preferencesFadeOutKey";
 	}
 
 	public static final int BITS_PER_BYTE = 8;

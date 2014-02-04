@@ -25,10 +25,6 @@
     <string name="preferencesCountInTimeSummary">Duration is </string>
     <string name="preferencesBufferSizeTitle">Audio buffer size</string>
     <string name="preferencesBufferSizeSummary">Size of audio buffer factor is</string>
-    <string name="preferencesFadeInTitle">Fade in</string>
-    <string name="preferencesFadeInSummary">Sequence fade in tempo</string>
-    <string name="preferencesFadeOutTitle">Fade out</string>
-    <string name="preferencesFadeOutSummary">Sequence fade out tempo</string>
     
     <!-- About dialog -->
     <string name="about_title">About Easy Loop</string>

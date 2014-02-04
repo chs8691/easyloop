@@ -23,8 +23,6 @@ public class SettingsBuffer {
 
 	private float bufferSizeFactor;
 	private long countInTime;
-	private int fadeIn;
-	private int fadeOut;
 
 	private SettingsBuffer() {
 	}
@@ -37,14 +35,6 @@ public class SettingsBuffer {
 		return countInTime;
 	}
 
-	public int getFadeIn() {
-		return fadeIn;
-	}
-
-	public int getFadeOut() {
-		return fadeOut;
-	}
-
 	/** Updates all shared preferences buffered in this SettingsBuffer */
 	public void refreshSharedPreferences(final Context context) {
 		final SharedPreferences prefs = PreferenceManager
@@ -53,15 +43,9 @@ public class SettingsBuffer {
 				Constants.SharedPreferences.COUNT_IN_TIME, "1.0")));
 		bufferSizeFactor = Float.parseFloat(prefs.getString(
 				Constants.SharedPreferences.BUFFER_SIZE, "1.0"));
-		fadeIn = Integer.parseInt(prefs.getString(
-				Constants.SharedPreferences.FADE_IN, "0"));
-		fadeOut = Integer.parseInt(prefs.getString(
-				Constants.SharedPreferences.FADE_OUT, "0"));
 
 		Log.v(TAG, "countInTime=" + countInTime);
 		Log.v(TAG, "bufferSizeFactor=" + bufferSizeFactor);
-		Log.v(TAG, "fadeIn=" + fadeIn);
-		Log.v(TAG, "fadeOut=" + fadeOut);
 
 	}
 }

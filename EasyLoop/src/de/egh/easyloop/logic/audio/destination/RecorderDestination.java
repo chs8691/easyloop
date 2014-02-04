@@ -24,7 +24,6 @@ public class RecorderDestination implements AudioDestination {
 	private int bufferSize;
 	private final ContextWrapper contextWrapper;
 	private DataOutputStream dos;
-	private boolean fadeIn;
 	private FileOutputStream fos;
 	private boolean mute;
 	private boolean open = false;
@@ -135,7 +134,6 @@ public class RecorderDestination implements AudioDestination {
 		}
 		this.open = true;
 		startTime = System.currentTimeMillis();
-		fadeIn = true;
 
 	}
 
@@ -162,8 +160,6 @@ public class RecorderDestination implements AudioDestination {
 		// The Strategy depends of the source buffer size, so we have to set it
 		// once here.
 		if (peakStrategy == null)
-			// peakStrategy = new
-			// PeakStrategy(readResult.getBufferSizeInByte());
 			peakStrategy = new PeakStrategy(Util.getBufferSizeInByte());
 
 		storeReadResult(readResult);
@@ -171,24 +167,6 @@ public class RecorderDestination implements AudioDestination {
 		if (!open)
 			throw new RuntimeException("Audio destination is not active.");
 
-		// if (fadeIn) {
-		// final int fadeSize = Math.min(bufferSize, 2000);
-		// // Fade in
-		// try {
-		// for (int i = 0; i < fadeSize; i++)
-		// dos.writeShort(0);
-		// for (int i = fadeSize; i < bufferSize; i++) {
-		// if (mute)
-		// dos.writeShort(0);
-		// else
-		// dos.writeShort(buffer[i]);
-		// }
-		// } catch (final IOException e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// // normal output
-		// else
 		for (int i = 0; i < bufferSize; i++) {
 			try {
 				if (mute)

@@ -2,30 +2,6 @@
 <resources>
 
     <!-- Count In Time in seconds -->
-    <string-array name="preferenceFadeInValues">
-        <item>10000</item>
-        <item>1000</item>
-        <item>100</item>
-        <item>0</item>
-    </string-array>
-    <string-array name="preferenceFadeInEntries">
-        <item>long</item>
-        <item>mid</item>
-        <item>short</item>
-        <item>null</item>
-    </string-array>
-    <string-array name="preferenceFadeOutValues">
-        <item>10000</item>
-        <item>1000</item>
-        <item>100</item>
-        <item>0</item>
-    </string-array>
-    <string-array name="preferenceFadeOutEntries">
-        <item>long</item>
-        <item>mid</item>
-        <item>short</item>
-        <item>null</item>
-    </string-array>
     <string-array name="preferenceCountInValues">
         <item>0.5</item>
         <item>1</item>

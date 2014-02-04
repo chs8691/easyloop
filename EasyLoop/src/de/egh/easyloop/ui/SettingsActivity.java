@@ -57,16 +57,6 @@ public class SettingsActivity extends PreferenceActivity implements
 			final ListPreference pref = (ListPreference) findPreference(key);
 			pref.setSummary(getString(R.string.preferencesBufferSizeSummary)
 					+ " x " + pref.getEntry());
-		} else if (key.equals(Constants.SharedPreferences.FADE_IN) //
-		) {
-			final ListPreference pref = (ListPreference) findPreference(key);
-			pref.setSummary(getString(R.string.preferencesFadeInSummary) + " "
-					+ pref.getEntry());
-		} else if (key.equals(Constants.SharedPreferences.FADE_OUT) //
-		) {
-			final ListPreference pref = (ListPreference) findPreference(key);
-			pref.setSummary(getString(R.string.preferencesFadeOutSummary) + " "
-					+ pref.getEntry());
 		}
 
 	}
