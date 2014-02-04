@@ -89,7 +89,7 @@ public class MicSource implements AudioSource {
 
 	@Override
 	public void read() {
-		readSize = audioRecord.read(bufferShort, 0, bufferSizeInByte / 4);
+		readSize = audioRecord.read(bufferShort, 0, bufferSizeInByte / 2);
 	}
 
 	@Override

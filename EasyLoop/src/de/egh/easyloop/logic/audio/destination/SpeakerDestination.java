@@ -16,8 +16,10 @@ public class SpeakerDestination implements AudioDestination {
 
 	private int bufferSize;
 	private boolean muted;
+
 	// If muted: Play empty buffer
-	private short[] mutedBuffer;
+	private final short[] mutedBuffer;
+
 	private boolean open;
 	private final PeakStrategy peakStrategy;
 	private final int playBufferSizeInByte;
@@ -52,6 +54,8 @@ public class SpeakerDestination implements AudioDestination {
 
 		// prevent null pointer exception
 		buffer = Util.createBuffer();
+
+		mutedBuffer = Util.createBuffer();
 
 	}
 
@@ -123,7 +127,6 @@ public class SpeakerDestination implements AudioDestination {
 	private void storeReadResult(final ReadResult readResult) {
 
 		readResult.copy(buffer);
-		mutedBuffer = new short[buffer.length];
 
 		bufferSize = readResult.getSize();
 
@@ -136,12 +139,14 @@ public class SpeakerDestination implements AudioDestination {
 
 	@Override
 	public void write(final ReadResult readResult) {
+
 		storeReadResult(readResult);
 
 		if (muted)
 			audioTrack.write(mutedBuffer, 0, bufferSize);
 		else
 			audioTrack.write(buffer, 0, bufferSize);
+
 	}
 
 }

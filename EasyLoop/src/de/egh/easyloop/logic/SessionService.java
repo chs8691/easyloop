@@ -208,6 +208,7 @@ public class SessionService extends Service {
 
 					playerProgress.tapeLevel = tapeDestination
 							.getActualMaxLevel();
+
 					publishProgress(playerProgress);
 				}
 
@@ -863,6 +864,7 @@ public class SessionService extends Service {
 
 	public void tapePlay() {
 		Log.v(TAG, "tapePlay()");
+		// Debug.startMethodTracing("/sdcard/tapePlay.trace");
 		// Stop actual recording
 		if (recorder.isOpen()) {
 			recorder.close();
@@ -894,6 +896,7 @@ public class SessionService extends Service {
 	 */
 	public void tapeRecord() {
 		Log.v(TAG, "tapeRecord()");
+		// Debug.startMethodTracing("/sdcard/tapeRecord.trace");
 
 		if (playerTask != null
 				&& playerTask.getStatus() != AsyncTask.Status.FINISHED) {
@@ -923,6 +926,7 @@ public class SessionService extends Service {
 			playerTask.cancel(true);
 			sessionEventListener.onPlayStop();
 		}
+		// Debug.stopMethodTracing();
 
 	}
 }

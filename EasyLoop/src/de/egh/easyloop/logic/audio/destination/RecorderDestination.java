@@ -24,6 +24,7 @@ public class RecorderDestination implements AudioDestination {
 	private int bufferSize;
 	private final ContextWrapper contextWrapper;
 	private DataOutputStream dos;
+	private boolean fadeIn;
 	private FileOutputStream fos;
 	private boolean mute;
 	private boolean open = false;
@@ -58,6 +59,7 @@ public class RecorderDestination implements AudioDestination {
 		try {
 			// Close file
 			dos.close();
+
 			bos.close();
 			fos.close();
 		} catch (final IOException e) {
@@ -69,51 +71,6 @@ public class RecorderDestination implements AudioDestination {
 
 		Log.v(TAG, "Wrote to file " + file.getPath() + " " + file.length());
 
-		// All this random access stuff is much to slow
-		// // Fade in and out
-		// try {
-		// final RandomAccessFile raf = new RandomAccessFile(file, "rw");
-		//
-		// if (raf.length() > (Constants.AudioSettings.FADE_SIZE_SHORT * 2)) {
-		// final float factor = 1.0f / Constants.AudioSettings.FADE_SIZE_SHORT;
-		// short value;
-		//
-		// // Fade in
-		// for (int i = 0; i <= Constants.AudioSettings.FADE_SIZE_SHORT; i++) {
-		// // Point to the next short value
-		// raf.seek(2 * i);
-		// value = (short) (factor * i * raf.readShort());
-		// raf.writeShort(value);
-		// }
-		//
-		// // Fade out
-		// // Set pointer to start position (in bytes)
-		// long pos = raf.length()
-		// - (Constants.AudioSettings.FADE_SIZE_SHORT * 2);
-		// for (int i = Constants.AudioSettings.FADE_SIZE_SHORT; i >= 0; i--) {
-		// raf.seek(pos);
-		// value = (short) (factor * i * raf.readShort());
-		// raf.writeShort(value);
-		// // Set the pointer value to the next short
-		// pos += 2;
-		// }
-		//
-		// }
-		// // Very, very small files will be completely nulled
-		// else {
-		// final byte[] buffer = new byte[(int) raf.length()];
-		// raf.seek(0);
-		// raf.write(buffer);
-		// }
-		// raf.close();
-		//
-		// } catch (final FileNotFoundException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// } catch (final IOException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
 	}
 
 	/**
@@ -178,6 +135,7 @@ public class RecorderDestination implements AudioDestination {
 		}
 		this.open = true;
 		startTime = System.currentTimeMillis();
+		fadeIn = true;
 
 	}
 
@@ -213,6 +171,24 @@ public class RecorderDestination implements AudioDestination {
 		if (!open)
 			throw new RuntimeException("Audio destination is not active.");
 
+		// if (fadeIn) {
+		// final int fadeSize = Math.min(bufferSize, 2000);
+		// // Fade in
+		// try {
+		// for (int i = 0; i < fadeSize; i++)
+		// dos.writeShort(0);
+		// for (int i = fadeSize; i < bufferSize; i++) {
+		// if (mute)
+		// dos.writeShort(0);
+		// else
+		// dos.writeShort(buffer[i]);
+		// }
+		// } catch (final IOException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// // normal output
+		// else
 		for (int i = 0; i < bufferSize; i++) {
 			try {
 				if (mute)
