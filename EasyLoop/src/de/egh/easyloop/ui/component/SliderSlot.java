@@ -39,7 +39,9 @@ public class SliderSlot extends RelativeLayout {
 	}
 
 	private EventListener eventListener;
-	private final ToggleButton muteButton;
+
+	/** !MuteButton,not very nice. */
+	private final ToggleButton openButton;
 	private final SeekBar seekBar;
 	private final ToggleButton switchButton;
 	private final TextView title;
@@ -49,19 +51,19 @@ public class SliderSlot extends RelativeLayout {
 		super(context, attrs);
 		inflate(context, R.layout.slider_slot_view, this);
 
-		muteButton = (ToggleButton) findViewById(R.id.sliderView_muteToggle);
+		openButton = (ToggleButton) findViewById(R.id.sliderView_muteToggle);
 		switchButton = (ToggleButton) findViewById(R.id.sliderView_switchToggle);
 		vuMeterView = (VuMeter) findViewById(R.id.sliderView_vuMeter);
 		title = (TextView) findViewById(R.id.sliderView_titleText);
 
-		muteButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+		openButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
 			@Override
 			public void onCheckedChanged(final CompoundButton buttonView,
 					final boolean isChecked) {
 				if (eventListener != null) {
-					eventListener.onMuteButtonToggled(isChecked);
-					vuMeterView.setMute(isChecked);
+					eventListener.onMuteButtonToggled(!isChecked);
+					vuMeterView.setMute(!isChecked);
 				}
 			}
 
@@ -123,12 +125,12 @@ public class SliderSlot extends RelativeLayout {
 	 */
 	public void activateMuteButton(final boolean activated) {
 		if (activated) {
-			muteButton.setEnabled(true);
-			muteButton.setVisibility(View.VISIBLE);
+			openButton.setEnabled(true);
+			openButton.setVisibility(View.VISIBLE);
 		} else {
-			muteButton.setChecked(false);
-			muteButton.setEnabled(false);
-			muteButton.setVisibility(View.GONE);
+			openButton.setChecked(false);
+			openButton.setEnabled(false);
+			openButton.setVisibility(View.GONE);
 		}
 
 	}
@@ -166,7 +168,7 @@ public class SliderSlot extends RelativeLayout {
 
 	/** TRUE, if mute button is set, otherwise false */
 	public boolean isMuted() {
-		return muteButton.isChecked();
+		return !openButton.isChecked();
 	}
 
 	public void setEventListener(final EventListener eventListener) {
@@ -195,7 +197,7 @@ public class SliderSlot extends RelativeLayout {
 
 	/** Initializes muting without firing this as event. */
 	public void setMute(final boolean mute) {
-		muteButton.setChecked(mute);
+		openButton.setChecked(!mute);
 		vuMeterView.setMute(mute);
 	}
 

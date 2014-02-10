@@ -8,6 +8,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -15,14 +18,15 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.ToggleButton;
+import android.widget.TextView;
+import de.egh.easyloop.application.Constants;
 import de.egh.easyloop.application.SettingsBuffer;
 import de.egh.easyloop.helper.Util;
-import de.egh.easyloop.logic.AudioService;
 import de.egh.easyloop.logic.SessionService;
 import de.egh.easyloop.logic.SessionService.SessionEventListener;
 import de.egh.easyloop.ui.SettingsActivity;
@@ -66,28 +70,16 @@ public class MainActivity extends Activity {
 	private final static String TAG = "MainActivity";
 
 	private AudioManager audioManager;
-	AudioService audioService = new AudioService() {
 
-		@Override
-		public boolean isInMute() {
-			return audioManager.isMicrophoneMute();
-		}
-
-		@Override
-		public void setInMute(final boolean mute) {
-			Log.v(TAG, "AudioService.setInMute=" + mute);
-			audioManager.setMicrophoneMute(mute);
-		}
-	};
-
-	private ToggleButton countInButton;
+	private ImageButton countInButton;
 
 	public String filename;
 
 	private SliderSlot inSliderSlot;
 	private SliderSlot liveSliderSlot;
-	private TapeButtonView play1Button;
 
+	private TapeButtonView play1Button;
+	private SharedPreferences prefs;
 	private TapeButtonView record1Button;
 	private SessionService.SessionEventListener sessionEventListener;
 	private SessionService sessionService;
@@ -95,10 +87,18 @@ public class MainActivity extends Activity {
 	/** Defines callbacks for service binding, passed to bindService() */
 
 	private ServiceConnection sessionServiceConnection;
+
 	private ImageButton stop;
-	private ToggleButton tapeCountInToggle;
+
+	private ImageButton tapeCountInToggle;
 
 	private SliderSlot tapeSliderSlot;
+
+	private ImageButton volumeDown;
+
+	private ImageButton volumeUp;
+
+	private TextView volumeValue;
 
 	/**
 	 * Don't create ServiceConnection befor UI elements have been created, for
@@ -208,6 +208,11 @@ public class MainActivity extends Activity {
 					}
 
 					@Override
+					public void onStreamVolumeChanged(final int volume) {
+						volumeValue.setText("" + sessionService.getVolume());
+					}
+
+					@Override
 					public void onTapeLevelChanged(final short level) {
 						// if (level > 100)
 						// Log.v(TAG, "Level=" + level);
@@ -253,7 +258,12 @@ public class MainActivity extends Activity {
 							sessionService.getPlayerDuration(),
 							sessionService.getPlayerActualTime());
 
-				countInButton.setChecked(sessionService.isCountInEnabled());
+				// As long as there is no nice status behaviour for the image
+				// toggel we have to set the image direct
+				if (sessionService.isCountInEnabled())
+					countInButton.setImageResource(R.drawable.count_in);
+				else
+					countInButton.setImageResource(R.drawable.direct_start);
 
 				// --- Mic In Slot -------------------------//
 				inSliderSlot.setSwitchButton(sessionService.isInOpen());
@@ -328,15 +338,26 @@ public class MainActivity extends Activity {
 				});
 
 				tapeCountInToggle
-						.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+						.setOnClickListener(new View.OnClickListener() {
 
 							@Override
-							public void onCheckedChanged(
-									final CompoundButton buttonView,
-									final boolean isChecked) {
-								sessionService.setCountIn(isChecked);
+							public void onClick(final View v) {
+								if (sessionService.isCountInEnabled()) {
+									countInButton
+											.setImageResource(R.drawable.direct_start);
+									sessionService.setCountIn(false);
+
+								} else {
+									countInButton
+											.setImageResource(R.drawable.count_in);
+									sessionService.setCountIn(true);
+
+								}
 							}
 						});
+
+				// Volume buttons for stream volume
+				volumeValue.setText("" + sessionService.getVolume());
 
 			}
 
@@ -355,17 +376,17 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		// Initialize SettingsBuffer
-		SettingsBuffer.getInstance().refreshSharedPreferences(this);
-
 		// Set all default values once for this application
 		// This must be done in the 'Main' first activity
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
+		// Initialize SettingsBuffer
+		SettingsBuffer.getInstance().refreshSharedPreferences(this);
+
 		audioManager = (AudioManager) this
 				.getSystemService(Context.AUDIO_SERVICE);
 
-		tapeCountInToggle = (ToggleButton) findViewById(R.id.tapeCountInToggle);
+		tapeCountInToggle = (ImageButton) findViewById(R.id.tapeCountInToggle);
 
 		stop = (ImageButton) findViewById(R.id.buttonStop);
 		stop.setOnClickListener(new View.OnClickListener() {
@@ -373,11 +394,12 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(final View v) {
 				Log.v(TAG, "Stop:onCLick()");
-				sessionService.tapeStop();
+				play1Button.stop();
+				record1Button.stop();
 			}
 		});
 
-		countInButton = (ToggleButton) findViewById(R.id.tapeCountInToggle);
+		countInButton = (ImageButton) findViewById(R.id.tapeCountInToggle);
 		// --- Tape buttons ---//
 		play1Button = (TapeButtonView) findViewById(R.id.play1Button);
 
@@ -430,6 +452,26 @@ public class MainActivity extends Activity {
 		liveSliderSlot.activateMuteButton(true);
 		liveSliderSlot.activateSwitchButton(false);
 
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+		// --- Volume Control ----------------------------------//
+		volumeValue = (TextView) findViewById(R.id.volumeValue);
+		volumeUp = (ImageButton) findViewById(R.id.buttonUp);
+		volumeUp.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(final View v) {
+				sessionService.volumeUp();
+			}
+		});
+		volumeDown = (ImageButton) findViewById(R.id.buttonDown);
+		volumeDown.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(final View v) {
+				sessionService.volumeDown();
+			}
+		});
 	}
 
 	@Override
@@ -459,6 +501,20 @@ public class MainActivity extends Activity {
 
 		super.onResume();
 
+		final String savedOrientation = prefs.getString(
+				Constants.SharedPreferences.Orientation.KEY,
+				Constants.SharedPreferences.Orientation.SENSOR);
+		if (savedOrientation
+				.equals(Constants.SharedPreferences.Orientation.LANDSCAPE)) {
+			if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		} else if (savedOrientation
+				.equals(Constants.SharedPreferences.Orientation.PORTRAIT)) {
+			if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		} else if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR)
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+
 		// Views must be created at this point in time.
 		createServiceConnection();
 
@@ -471,6 +527,12 @@ public class MainActivity extends Activity {
 				sessionServiceConnection, Context.BIND_AUTO_CREATE);
 
 		Log.v(TAG, "bindService returned " + sessionServiceBound);
+
+		// Screen always on
+		if (prefs.getBoolean(Constants.SharedPreferences.KEEP_SCREEN_ON, false) == true) {
+			getWindow()
+					.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		}
 
 	}
 
@@ -486,6 +548,86 @@ public class MainActivity extends Activity {
 				sessionService.removeSessionEventListener();
 
 			unbindService(sessionServiceConnection);
+		}
+
+		// I'm not shure if we really need this
+		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+	}
+
+	/** For Logging from ActivityInfo. */
+	private String orientationToString(final int orientation) {
+		switch (orientation) {
+		case ActivityInfo.SCREEN_ORIENTATION_BEHIND:
+			return "SCREEN_ORIENTATION_BEHIND";
+		case ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR:
+			return "SCREEN_ORIENTATION_FULL_SENSOR";
+		case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
+			return "SCREEN_ORIENTATION_LANDSCAPE";
+		case ActivityInfo.SCREEN_ORIENTATION_NOSENSOR:
+			return "SCREEN_ORIENTATION_NOSENSOR";
+		case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
+			return "SCREEN_ORIENTATION_PORTRAIT";
+		case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
+			return "SCREEN_ORIENTATION_REVERSE_LANDSCAPE";
+		case ActivityInfo.SCREEN_ORIENTATION_SENSOR:
+			return "SCREEN_ORIENTATION_SENSOR";
+		case ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE:
+			return "SCREEN_ORIENTATION_SENSOR_LANDSCAPE";
+		case ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT:
+			return "SCREEN_ORIENTATION_SENSOR_PORTRAIT";
+		case ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED:
+			return "SCREEN_ORIENTATION_UNSPECIFIED";
+		case ActivityInfo.SCREEN_ORIENTATION_USER:
+			return "SCREEN_ORIENTATION_USER";
+		default:
+			return "Unknown value=" + orientation;
+		}
+	}
+
+	private int rotationToOrientation(final int rotation) {
+
+		final Configuration config = getResources().getConfiguration();
+
+		if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+			Log.v(TAG, "Normal configuation is landscape");
+			if (rotation == Surface.ROTATION_90)
+				return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+			else if (rotation == Surface.ROTATION_180)
+				return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+			else if (rotation == Surface.ROTATION_270)
+				return ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+			else
+				return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+		}
+		// Portrait (or non-landscape)
+		else {
+			Log.v(TAG, "Normal configuation is non-landscape");
+			if (rotation == Surface.ROTATION_90)
+				return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+			else if (rotation == Surface.ROTATION_180)
+				return ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+			else if (rotation == Surface.ROTATION_270)
+				return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+			else
+				return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+		}
+
+	}
+
+	/** For Logging from WindowsManager. */
+	private String rotationToString(final int displayRotation) {
+		switch (displayRotation) {
+		case Surface.ROTATION_0:
+			return "ROTATION_0";
+		case Surface.ROTATION_180:
+			return "ROTATION_180";
+		case Surface.ROTATION_270:
+			return "ROTATION_270";
+		case Surface.ROTATION_90:
+			return "ROTATION_90";
+		default:
+			return "Unknown value=" + displayRotation;
 		}
 	}
 

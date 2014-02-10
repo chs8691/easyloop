@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<previews>
+
+    <preview
+        name="Nx10"
+        activity="de.egh.easyloop.MainActivity"
+        config="layout-de-ldltr-sw800dp-w1280dp-h800dp-xlarge-notlong-land-notnight-xhdpi-finger-keyssoft-nokeys-navhidden-nonav-2560x1600-v19"
+        device="Nexus 10"
+        devicestate="Landscape"
+        locale="de"
+        target="Android 4.4.2"
+        theme="@style/AppTheme" >
+    </preview>
+    <preview
+        name="Nx7"
+        activity="de.egh.easyloop.MainActivity"
+        config="layout-de-ldltr-sw600dp-w961dp-h600dp-large-notlong-land-notnight-tvdpi-finger-keyssoft-nokeys-navhidden-nonav-1280x800-v19"
+        device="Nexus 7"
+        devicestate="Landscape"
+        locale="de"
+        target="Android 4.4.2"
+        theme="@style/AppTheme" >
+    </preview>
+    <preview
+        name="Nx4"
+        activity="de.egh.easyloop.MainActivity"
+        config="layout-de-ldltr-sw384dp-w640dp-h384dp-normal-notlong-land-notnight-xhdpi-finger-keyssoft-nokeys-navhidden-nonav-1280x768-v19"
+        device="Nexus 4"
+        devicestate="Landscape"
+        locale="de"
+        target="Android 4.4.2"
+        theme="@style/AppTheme" >
+    </preview>
+    <preview
+        name="Nx4p"
+        activity="de.egh.easyloop.MainActivity"
+        config="layout-ldltr-sw384dp-w384dp-h640dp-normal-notlong-port-notnight-xhdpi-finger-keyssoft-nokeys-navhidden-nonav-1280x768-v19"
+        device="Nexus 4"
+        devicestate="Portrait"
+        target="Android 4.4.2"
+        theme="@style/AppTheme" >
+    </preview>
+    <preview
+        name="Nx7p"
+        activity="de.egh.easyloop.MainActivity"
+        config="layout-de-ldltr-sw600dp-w600dp-h961dp-large-notlong-port-notnight-tvdpi-finger-keyssoft-nokeys-navhidden-nonav-1280x800-v19"
+        device="Nexus 7"
+        devicestate="Portrait"
+        locale="de"
+        target="Android 4.4.2"
+        theme="@style/AppTheme" >
+    </preview>
+    <preview
+        name="nx10p"
+        activity="de.egh.easyloop.MainActivity"
+        config="layout-de-ldltr-sw800dp-w800dp-h1280dp-xlarge-notlong-port-notnight-xhdpi-finger-keyssoft-nokeys-navhidden-nonav-2560x1600-v19"
+        device="Nexus 10"
+        devicestate="Portrait"
+        locale="de"
+        target="Android 4.4.2"
+        theme="@style/AppTheme" >
+    </preview>
+
+</previews>

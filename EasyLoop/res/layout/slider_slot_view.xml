@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="20"
+        android:gravity="center"
         android:orientation="vertical" >
 
         <LinearLayout
@@ -23,6 +24,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="10"
                 android:text="Slot" />
+
         </LinearLayout>
 
         <de.egh.easyloop.ui.component.VuMeter
@@ -35,6 +37,7 @@
             android:id="@+id/sliderView_seekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
     </LinearLayout>
 
     <ToggleButton

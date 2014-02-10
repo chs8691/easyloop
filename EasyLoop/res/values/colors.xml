@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="button_inactive">#88d7dee2</color>
     <color name="toggle_light_on">#FF03B1FC</color>
     <color name="toggle_light_off">#2203B1FC</color>
+    <!--  color name="button_active">#FFd7dee2</color -->
     <color name="button_active">#FFd7dee2</color>
+    <!--  color name="button_inactive">#88d7dee2</color -->
+    <color name="button_inactive">#FFd7dee2</color>
+    
     <color name="button_checked">#FFCBD2D6</color>
     <color name="vu_background">#00404547</color>
     <color name="a">#000000</color>

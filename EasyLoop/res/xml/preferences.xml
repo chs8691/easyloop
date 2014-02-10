@@ -8,7 +8,21 @@
         android:key="preferencesCountInKey"
         android:summary="@string/preferencesCountInTimeSummary"
         android:title="@string/preferencesCountInTimeTitle" />
-    
+
+    <SwitchPreference
+        android:key="preferencesKeepScreenOnKey"
+        android:defaultValue="false"
+        android:summaryOff="@string/preferencesKeepScreenOnSummaryOff"
+        android:summaryOn="@string/preferencesKeepScreenOnSummaryOn"
+        android:switchTextOff="@string/preferencesKeepScreenOnTextOff"
+        android:switchTextOn="@string/preferencesKeepScreenOnTextOn" />
+
+    <ListPreference
+        android:defaultValue="sensor"
+        android:entries="@array/preferenceOrientationEntries"
+        android:entryValues="@array/preferenceOrientationValues"
+        android:key="preferencesOrientationKey"
+        android:title="@string/preferencesOrientationTitle" />
     <ListPreference
         android:defaultValue="1"
         android:entries="@array/preferenceBufferSizeEntries"
@@ -16,5 +30,5 @@
         android:key="preferencesBufferSizeKey"
         android:summary="@string/preferencesBufferSizeSummary"
         android:title="@string/preferencesBufferSizeTitle" />
-      
+
 </PreferenceScreen>

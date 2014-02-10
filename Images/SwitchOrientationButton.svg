@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="864"
+   height="864"
+   id="svg2993"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="SwitchOrientationButton.svg"
+   enable-background="new"
+   inkscape:export-filename="D:\Projekte\EGH\ADT_Workspace\eghEasyLoop\Images\l\stop_button.png"
+   inkscape:export-xdpi="2.5"
+   inkscape:export-ydpi="2.5">
+  <defs
+     id="defs2995">
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect5951"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect5947"
+       is_visible="true"
+       pattern="M 0,5 C 0,2.24 2.24,0 5,0 7.76,0 10,2.24 10,5 10,7.76 7.76,10 5,10 2.24,10 0,7.76 0,5 z"
+       copytype="single_stretched"
+       prop_scale="1"
+       scale_y_rel="false"
+       spacing="0"
+       normal_offset="0"
+       tang_offset="0"
+       prop_units="false"
+       vertical_pattern="false"
+       fuse_tolerance="0" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect5943"
+       is_visible="true"
+       pattern="M 0,0 0,10 10,5 z"
+       copytype="single_stretched"
+       prop_scale="1"
+       scale_y_rel="false"
+       spacing="0"
+       normal_offset="0"
+       tang_offset="0"
+       prop_units="false"
+       vertical_pattern="false"
+       fuse_tolerance="0" />
+    <marker
+       inkscape:stockid="Arrow1Sstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Sstart"
+       style="overflow:visible">
+      <path
+         id="path3828"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.2) translate(6,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow2Lstart"
+       style="overflow:visible">
+      <path
+         id="path3834"
+         style="fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(1.1) translate(1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Mstart"
+       style="overflow:visible">
+      <path
+         id="path3822"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.4) translate(10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path3816"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.8) translate(12.5,0)" />
+    </marker>
+    <pattern
+       inkscape:stockid="Checkerboard"
+       id="Checkerboard"
+       patternTransform="translate(0,0) scale(10,10)"
+       height="2"
+       width="2"
+       patternUnits="userSpaceOnUse"
+       inkscape:collect="always">
+      <rect
+         id="rect6770"
+         height="1"
+         width="1"
+         y="0"
+         x="0"
+         style="fill:black;stroke:none" />
+      <rect
+         id="rect6772"
+         height="1"
+         width="1"
+         y="1"
+         x="1"
+         style="fill:black;stroke:none" />
+    </pattern>
+    <linearGradient
+       id="linearGradient7434">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop7436" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop7438" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient7410"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#ff86ff;stop-opacity:1;"
+         offset="0"
+         id="stop7412" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient5970"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop5972" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.68828334"
+     inkscape:cx="428.92432"
+     inkscape:cy="388.22862"
+     inkscape:current-layer="layer3"
+     showgrid="true"
+     inkscape:document-units="px"
+     inkscape:grid-bbox="true"
+     inkscape:window-width="1216"
+     inkscape:window-height="1001"
+     inkscape:window-x="5"
+     inkscape:window-y="3"
+     inkscape:window-maximized="0"
+     inkscape:snap-grids="true">
+    <sodipodi:guide
+       position="409.68477,0"
+       orientation="0,864"
+       id="guide9059" />
+    <sodipodi:guide
+       position="864.46957,480.9066"
+       orientation="-864,0"
+       id="guide9061" />
+    <sodipodi:guide
+       position="864,864"
+       orientation="0,-864"
+       id="guide9063" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata2998">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     transform="translate(0,800)"
+     style="display:none"
+     sodipodi:insensitive="true">
+    <rect
+       style="opacity:0.48484844;fill:url(#Checkerboard);fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="rect9067"
+       width="864"
+       height="864"
+       x="0"
+       y="0"
+       transform="translate(0,-800)" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Ebene2"
+     style="display:inline">
+    <rect
+       style="fill:none;stroke:#050a4a;stroke-width:76.08987427;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3040"
+       width="460.03"
+       height="582.07275"
+       x="204.39914"
+       y="112.39748"
+       ry="19.260792" />
+  </g>
+  <g
+     style="display:none"
+     inkscape:label="Ebene3"
+     id="g11785"
+     inkscape:groupmode="layer"
+     sodipodi:insensitive="true">
+    <path
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path5974"
+       d="m 850.30833,200.83726 0.83509,196.29358 -193.80369,-111.2179 z"
+       style="fill:#050a4a;fill-opacity:1;stroke:#050a4a;stroke-width:26.25235176;stroke-linecap:round;stroke-miterlimit:0.5;stroke-opacity:1;display:inline" />
+    <path
+       style="fill:#050a4a;fill-opacity:1;stroke:#050a4a;stroke-width:28.73337555;stroke-linecap:round;stroke-miterlimit:0.5;stroke-opacity:1;display:inline"
+       d="M 14.491685,202.08499 13.552684,407.52072 235.37769,291.10777 z"
+       id="path5985"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Ebene 4"
+     style="display:inline">
+    <path
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path5974-4"
+       d="m 666.17482,200.83726 -0.83509,196.29358 193.80369,-111.2179 z"
+       style="fill:#050a4a;fill-opacity:1;stroke:#050a4a;stroke-width:26.25235176;stroke-linecap:round;stroke-miterlimit:0.5;stroke-opacity:1;display:inline" />
+    <path
+       style="fill:#050a4a;fill-opacity:1;stroke:#050a4a;stroke-width:28.73337555;stroke-linecap:round;stroke-miterlimit:0.5;stroke-opacity:1;display:inline"
+       d="m 228.43869,202.08499 0.939,205.43573 L 7.552684,291.10777 z"
+       id="path5985-0"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+  </g>
+</svg>

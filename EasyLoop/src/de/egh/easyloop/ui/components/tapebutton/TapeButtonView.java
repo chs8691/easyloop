@@ -3,6 +3,7 @@ package de.egh.easyloop.ui.components.tapebutton;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 import de.egh.easyloop.R;
@@ -60,6 +61,8 @@ public class TapeButtonView extends RelativeLayout {
 	}
 
 	private static final int[] STATE_CHECKED = { R.attr.tapeButtonStateChecked };
+
+	private static final String TAG = "TapeButton";
 
 	private final ButtonIconView buttonIconView;
 
@@ -266,9 +269,15 @@ public class TapeButtonView extends RelativeLayout {
 	 * 
 	 */
 	public void startCounterPlay(final int duration, final int actualTime) {
-		if (!status.equals(Status.RUNNING))
-			throw new RuntimeException("Button is not in status running: "
-					+ status.name());
+		if (!status.equals(Status.RUNNING)) {
+			// This can happen under stress: very fast pressing record and play.
+			// Activate this exception if you want to find this error.
+			// throw new RuntimeException("Button is not in status running: "
+			// + status.name());
+			Log.e(TAG, "Button is not in status running: " + status.name()
+					+ " Don't start animation.");
+			return;
+		}
 		if (!type.equals(ButtonType.PLAY))
 			throw new RuntimeException("Type is not Play: " + type.name());
 		if (duration < 0)
@@ -291,5 +300,15 @@ public class TapeButtonView extends RelativeLayout {
 			throw new RuntimeException("Type is not Record: " + type.name());
 
 		circleCounterView.startAnimation(0, Type.SECONDS, actualTime);
+	}
+
+	/**
+	 * Consumer can call this method to 'press' stop. If button is not active or
+	 * not running, nothing will happens.
+	 */
+	public void stop() {
+		// not very nice implemented.
+		if (enabled && !status.equals(Status.STOPPED))
+			onButtonClicked();
 	}
 }

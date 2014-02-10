@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">EasyLoop</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="inToggleOn">An</string>
+    <string name="inToggleOff">Stumm</string>
+    <string name="inSliderSlotTitle">Eingang</string>
+    <string name="liveSliderSlotTitle">Liveausgang</string>
+    <string name="tapeSliderSlotTitle">Bandwiedergabe</string>
+    <string name="buttonOn">An</string>
+    <string name="buttonOff">Aus</string>
+    <string name="notificationTitle">Läuft</string>
+    <string name="notificationText">Die Bandmaschine läuft.</string>
+    <string name="preferencesCountInTimeTitle">Anzählzeit</string>
+    <string name="preferencesCountInTimeSummeryUnit">Sekunde(n)</string>
+    <string name="preferencesCountInTimeSummary">Dauer ist </string>
+    <string name="preferencesBufferSizeTitle">Audio Puffergröße</string>
+    <string name="preferencesBufferSizeSummary">Größe des Pufferfaktor ist</string>
+    <string name="preferencesOrientationTitle">Bildschirmausrichtung</string>
+    <string name="preferencesKeepScreenOnTextOn">On</string>
+    <string name="preferencesKeepScreenOnTextOff">Off</string>
+    <string name="preferencesKeepScreenOnSummaryOn">Bildschirm anlassen</string>
+    <string name="preferencesKeepScreenOnSummaryOff">Bildschirmsperre nach Geräteeinstellung</string>
+    
+    <!-- About dialog -->
+    <string name="about_title">Über Easy Loop</string>
+    <string name="about_text1">Hast Du eine Frage, Anregung oder einen Fehler? E-Mail bitte an</string>
+    <string name="about_text2">earl.grey.its.hand@gmail.com</string>
+    <string name="about_text3">Vielen Dank, dass Du EasyLoop benutzt!</string>
+    <string name="about_close_button">Schließen</string>
+
+</resources>

@@ -4,25 +4,76 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_centerHorizontal="true"
-    android:layout_margin="2dp"
+    android:layout_margin="@dimen/frame_margin"
     android:orientation="vertical"
     tools:context=".MainActivity" >
 
-    <de.egh.easyloop.ui.component.SliderSlot
-        android:id="@+id/inSliderSlot"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="10"
-        easyloop:sliderSlot_seekBarEnabled="true"
-        easyloop:sliderSlot_title="@string/inSliderSlotTitle" />
+        android:layout_weight="8"
+        android:orientation="horizontal" >
 
-    <de.egh.easyloop.ui.component.SliderSlot
-        android:id="@+id/liveSliderSlot"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="10"
-        easyloop:sliderSlot_seekBarEnabled="true"
-        easyloop:sliderSlot_title="@string/liveSliderSlotTitle" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            android:orientation="vertical" >
+
+            <de.egh.easyloop.ui.component.SliderSlot
+                android:id="@+id/inSliderSlot"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="10"
+                easyloop:sliderSlot_seekBarEnabled="true"
+                easyloop:sliderSlot_title="@string/inSliderSlotTitle" >
+            </de.egh.easyloop.ui.component.SliderSlot>
+
+            <de.egh.easyloop.ui.component.SliderSlot
+                android:id="@+id/liveSliderSlot"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="10"
+                easyloop:sliderSlot_seekBarEnabled="true"
+                easyloop:sliderSlot_title="@string/liveSliderSlotTitle" >
+            </de.egh.easyloop.ui.component.SliderSlot>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:orientation="vertical" >
+
+            <ImageButton
+                android:id="@+id/buttonUp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="10"
+                android:background="@drawable/tape_button"
+                android:src="@drawable/volume_up"
+                android:text="UP" />
+
+            <TextView
+                android:id="@+id/volumeValue"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="14"
+                android:gravity="center"
+                android:text="00"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/buttonDown"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="10"
+                android:background="@drawable/tape_button"
+                android:src="@drawable/volume_down"
+                android:text="DOWN" />
+        </LinearLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,16 +89,15 @@
             easyloop:sliderSlot_seekBarEnabled="true"
             easyloop:sliderSlot_title="@string/tapeSliderSlotTitle" />
 
-        <ToggleButton
+        <ImageButton
             android:id="@+id/tapeCountInToggle"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
             android:layout_weight="50"
-            android:background="@drawable/toggle_button"
-            android:textOff="@string/countInToggleOff"
-            android:textOn="@string/countInToggleOn" 
-            android:hapticFeedbackEnabled="true"/>
+            android:background="@drawable/tape_button"
+            android:hapticFeedbackEnabled="true"
+            android:src="@drawable/direct_start" />
     </LinearLayout>
 
     <LinearLayout
@@ -79,9 +129,7 @@
         android:layout_height="match_parent"
         android:layout_weight="10"
         android:background="@drawable/tape_button"
-        android:text="@string/buttonStop" 
         android:hapticFeedbackEnabled="true"
-        android:src="@drawable/stop_button"
-        />
+        android:src="@drawable/stop_button" />
 
 </LinearLayout>

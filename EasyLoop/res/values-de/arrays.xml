@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Count In Time in seconds -->
+    <string-array name="preferenceCountInValues">
+        <item>0.5</item>
+        <item>1</item>
+        <item>1.5</item>
+        <item>2</item>
+        <item>2.5</item>
+        <item>3</item>
+        <item>3.5</item>
+        <item>4</item>
+    </string-array>
+    <string-array name="preferenceCountInEntries">
+        <item>0.5</item>
+        <item>1</item>
+        <item>1.5</item>
+        <item>2</item>
+        <item>2.5</item>
+        <item>3</item>
+        <item>3.5</item>
+        <item>4</item>
+    </string-array>
+
+    <!-- Screen oriantation -->
+    <string-array name="preferenceOrientationValues">
+        <item>sensor</item>
+        <item>landscape</item>
+        <item>portrait</item>
+    </string-array>
+    <string-array name="preferenceOrientationEntries">
+        <item>Sensor</item>
+        <item>Querformat</item>
+        <item>Hochkant</item>
+    </string-array>
+
+    <!-- Buffer size factor -->
+    <string-array name="preferenceBufferSizeValues">
+        <item>1</item>
+        <item>4</item>
+        <item>16</item>
+    </string-array>
+    <string-array name="preferenceBufferSizeEntries">
+        <item>normal</item>
+        <item>groß</item>
+        <item>sehr groß</item>
+    </string-array>
+
+</resources>

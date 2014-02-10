@@ -4,6 +4,7 @@ import java.util.Map;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
@@ -32,6 +33,28 @@ public class SettingsActivity extends PreferenceActivity implements
 	}
 
 	@Override
+	protected void onResume() {
+
+		super.onResume();
+
+		final String savedOrientation = PreferenceManager
+				.getDefaultSharedPreferences(this).getString(
+						Constants.SharedPreferences.Orientation.KEY,
+						Constants.SharedPreferences.Orientation.SENSOR);
+		if (savedOrientation
+				.equals(Constants.SharedPreferences.Orientation.LANDSCAPE)) {
+			if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		} else if (savedOrientation
+				.equals(Constants.SharedPreferences.Orientation.PORTRAIT)) {
+			if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		} else if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR)
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+
+	}
+
+	@Override
 	public void onSharedPreferenceChanged(final SharedPreferences sharedPref,
 			final String key) {
 
@@ -52,11 +75,19 @@ public class SettingsActivity extends PreferenceActivity implements
 			pref.setSummary(getText(R.string.preferencesCountInTimeSummary)
 					+ ": " + pref.getEntry() + " "
 					+ getText(R.string.preferencesCountInTimeSummeryUnit));
-		} else if (key.equals(Constants.SharedPreferences.BUFFER_SIZE) //
+		}
+		// Screen orientation
+		else if (key.equals(Constants.SharedPreferences.Orientation.KEY) //
+		) {
+			final ListPreference pref = (ListPreference) findPreference(key);
+			pref.setSummary(pref.getEntry());
+		}
+		// Buffer Size
+		else if (key.equals(Constants.SharedPreferences.BUFFER_SIZE) //
 		) {
 			final ListPreference pref = (ListPreference) findPreference(key);
 			pref.setSummary(getString(R.string.preferencesBufferSizeSummary)
-					+ " x " + pref.getEntry());
+					+ " " + pref.getEntry());
 		}
 
 	}

@@ -3,21 +3,13 @@
 
     <string name="app_name">EasyLoop</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="buttonStart">Start</string>
-    <string name="buttonStop">Stop</string>
-    <string name="buttonClear">Clear</string>
-    <string name="buttonRecord">Record</string>
-    <string name="buttonPlay">Play</string>
-    <string name="inToggleOn">Muted</string>
-    <string name="inToggleOff">Mute</string>
+    <string name="inToggleOn">On</string>
+    <string name="inToggleOff">Muted</string>
     <string name="inSliderSlotTitle">In</string>
     <string name="liveSliderSlotTitle">Live</string>
     <string name="tapeSliderSlotTitle">Tape</string>
     <string name="buttonOn">On</string>
     <string name="buttonOff">Off</string>
-    <string name="countInToggleOn">Count in</string>
-    <string name="countInToggleOff">Direct</string>
     <string name="notificationTitle">Running</string>
     <string name="notificationText">The tapemachine in running.</string>
     <string name="preferencesCountInTimeTitle">Count in time</string>
@@ -25,6 +17,11 @@
     <string name="preferencesCountInTimeSummary">Duration is </string>
     <string name="preferencesBufferSizeTitle">Audio buffer size</string>
     <string name="preferencesBufferSizeSummary">Size of audio buffer factor is</string>
+    <string name="preferencesOrientationTitle">Screen Orientation</string>
+    <string name="preferencesKeepScreenOnTextOn">On</string>
+    <string name="preferencesKeepScreenOnTextOff">Off</string>
+    <string name="preferencesKeepScreenOnSummaryOn">Screen will be keept on</string>
+    <string name="preferencesKeepScreenOnSummaryOff">Screen will locked normally</string>
     
     <!-- About dialog -->
     <string name="about_title">About Easy Loop</string>

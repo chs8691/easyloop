@@ -5,10 +5,13 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
+import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Binder;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
@@ -26,7 +29,8 @@ import de.egh.easyloop.logic.audio.source.AudioSource.LoopEventListener;
 import de.egh.easyloop.logic.audio.source.MicSource;
 import de.egh.easyloop.logic.audio.source.PlayerSource;
 
-public class SessionService extends Service {
+public class SessionService extends Service implements
+		AudioManager.OnAudioFocusChangeListener {
 
 	/**
 	 * Progress type for the AsyncTask. Value holder for the lVU meter on the UI
@@ -438,10 +442,55 @@ public class SessionService extends Service {
 		/** Recording stopped */
 		public void onRecordStop();
 
+		public void onStreamVolumeChanged(int volume);
+
 		/**
 		 * tape output signal has been changed. Use this for showing the level.
 		 */
 		public void onTapeLevelChanged(short Level);
+	}
+
+	/**
+	 * Observers volume changes. From
+	 * http://stackoverflow.com/questions/6896746/
+	 * android-is-there-a-broadcast-action-for-volume-changes
+	 */
+	public class SettingsContentObserver extends ContentObserver {
+		Context context;
+		int previousVolume;
+
+		public SettingsContentObserver(final Context c, final Handler handler) {
+			super(handler);
+			context = c;
+
+			previousVolume = audioManager
+					.getStreamVolume(AudioManager.STREAM_MUSIC);
+		}
+
+		@Override
+		public boolean deliverSelfNotifications() {
+			return super.deliverSelfNotifications();
+		}
+
+		@Override
+		public void onChange(final boolean selfChange) {
+			super.onChange(selfChange);
+
+			final int currentVolume = audioManager
+					.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+			final int delta = previousVolume - currentVolume;
+
+			if (delta > 0) {
+				Log.v(TAG, "Decreased");
+				previousVolume = currentVolume;
+				sessionEventListener.onStreamVolumeChanged(currentVolume);
+			} else if (delta < 0) {
+				Log.v(TAG, "Increased");
+				previousVolume = currentVolume;
+				sessionEventListener.onStreamVolumeChanged(currentVolume);
+			}
+		}
 	}
 
 	private static final int NOTIFICATION_ID = 1;
@@ -452,16 +501,20 @@ public class SessionService extends Service {
 
 	private static final String TAG = "SessionService";
 
+	private AudioManager audioManager;
+
 	/**
 	 * An new session must be initialized once with initialize(), but a rebinded
 	 * serivce may not be initialized.
 	 */
 	private boolean initialize;
-
 	private AudioDestination liveDestination;
 
 	private final IBinder mBinder = new ServiceBinder();
+
 	private MicTask micTask;
+
+	private SettingsContentObserver mSettingsContentObserver;
 
 	private PlayerSource player;
 
@@ -548,6 +601,10 @@ public class SessionService extends Service {
 			}
 
 			@Override
+			public void onStreamVolumeChanged(final int volume) {
+			}
+
+			@Override
 			public void onTapeLevelChanged(final short level) {
 			}
 		};
@@ -613,6 +670,11 @@ public class SessionService extends Service {
 
 	public int getTapeVolume() {
 		return tapeDestination.getVolume();
+	}
+
+	/** Volume of the audio stream. */
+	public int getVolume() {
+		return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
 	}
 
 	/**
@@ -684,10 +746,43 @@ public class SessionService extends Service {
 	}
 
 	@Override
+	public void onAudioFocusChange(final int focusChange) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
 	public IBinder onBind(final Intent intent) {
 		Log.v(TAG, "onBind()");
 
 		return mBinder;
+	}
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+
+		audioManager = (AudioManager) getApplicationContext().getSystemService(
+				Context.AUDIO_SERVICE);
+		final int result = audioManager.requestAudioFocus(this,
+				AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+
+		if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+			Log.v(TAG, "Could not get audio focus");
+		}
+
+		mSettingsContentObserver = new SettingsContentObserver(this,
+				new Handler());
+		getApplicationContext().getContentResolver().registerContentObserver(
+				android.provider.Settings.System.CONTENT_URI, true,
+				mSettingsContentObserver);
+	}
+
+	@Override
+	public void onDestroy() {
+		getApplicationContext().getContentResolver().unregisterContentObserver(
+				mSettingsContentObserver);
+		super.onDestroy();
 	}
 
 	@Override
@@ -697,6 +792,11 @@ public class SessionService extends Service {
 
 		super.onRebind(intent);
 	}
+
+	// /** Must set set before first usage of live in switching on/off */
+	// public void setAudioService(final AudioService audioService) {
+	// // tapemachine.setAudioService(audioService);
+	// }
 
 	@Override
 	public int onStartCommand(final Intent intent, final int flags,
@@ -767,11 +867,6 @@ public class SessionService extends Service {
 	public void removeSessionEventListener() {
 		this.sessionEventListener = createSessionEventListenerDummy();
 	}
-
-	// /** Must set set before first usage of live in switching on/off */
-	// public void setAudioService(final AudioService audioService) {
-	// // tapemachine.setAudioService(audioService);
-	// }
 
 	/** Set to TRUE for switching on the count in. */
 	public void setCountIn(final boolean on) {
@@ -928,5 +1023,38 @@ public class SessionService extends Service {
 		}
 		// Debug.stopMethodTracing();
 
+	}
+
+	public void volumeDown() {
+		Log.v(TAG, "volmumeDown()");
+
+		Log.v(TAG,
+				"Stream volume="
+						+ audioManager
+								.getStreamVolume(AudioManager.STREAM_MUSIC));
+		audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+				AudioManager.ADJUST_LOWER, 0);
+		Log.v(TAG,
+				"Stream volume="
+						+ audioManager
+								.getStreamVolume(AudioManager.STREAM_MUSIC));
+		sessionEventListener.onStreamVolumeChanged(audioManager
+				.getStreamVolume(AudioManager.STREAM_MUSIC));
+	}
+
+	public void volumeUp() {
+		Log.v(TAG, "volmumeUp()");
+		Log.v(TAG,
+				"Stream volume="
+						+ audioManager
+								.getStreamVolume(AudioManager.STREAM_MUSIC));
+		audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+				AudioManager.ADJUST_RAISE, 0);
+		Log.v(TAG,
+				"Stream volume="
+						+ audioManager
+								.getStreamVolume(AudioManager.STREAM_MUSIC));
+		sessionEventListener.onStreamVolumeChanged(audioManager
+				.getStreamVolume(AudioManager.STREAM_MUSIC));
 	}
 }
